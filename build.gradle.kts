@@ -11,6 +11,7 @@ buildscript {
 
     dependencies {
         classpath(":web3-build-logic")
+        classpath("org.jetbrains.kotlin:kotlin-serialization:1.5.20")
     }
 }
 

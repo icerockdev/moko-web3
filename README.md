@@ -1,4 +1,4 @@
-[![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0) [![Download](https://api.bintray.com/packages/icerockdev/moko/moko-web3/images/download.svg) ](https://bintray.com/icerockdev/moko/moko-web3/_latestVersion) ![kotlin-version](https://img.shields.io/badge/kotlin-1.5.20-orange)
+[![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0) [![Download](https://img.shields.io/maven-central/v/dev.icerock.moko/web3) ](https://repo1.maven.org/maven2/dev/icerock/moko/web3) ![kotlin-version](https://kotlin-version.aws.icerock.dev/kotlin-version?group=dev.icerock.moko&name=web3)
 
 # Mobile Kotlin web3
 This is a Kotlin MultiPlatform library that ...
@@ -17,9 +17,9 @@ This is a Kotlin MultiPlatform library that ...
 ...
 
 ## Requirements
-- Gradle version 6.0+
+- Gradle version 6.8+
 - Android API 16+
-- iOS version 9.0+
+- iOS version 11.0+
 
 ## Versions
 - kotlin 1.5.20
@@ -30,7 +30,7 @@ root build.gradle
 ```groovy
 allprojects {
     repositories {
-        maven { url = "https://dl.bintray.com/icerockdev/moko" }
+        mavenCentral()
     }
 }
 ```

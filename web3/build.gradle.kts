@@ -6,10 +6,57 @@ plugins {
     id("multiplatform-library-convention")
     id("dev.icerock.mobile.multiplatform.android-manifest")
     id("publication-convention")
+    id("kotlinx-serialization")
 }
 
 dependencies {
-    commonMainApi(libs.coroutines)
+    commonMainImplementation(libs.coroutines)
+    commonMainImplementation(libs.kbignum)
+    commonMainImplementation(libs.kotlinSerialization)
+    commonMainImplementation(libs.klock)
+    commonMainImplementation(libs.ktorClient)
+    commonMainImplementation(libs.ktorClientLogigng)
+    
+    commonTestImplementation(libs.kotlinTestCommon)
+    commonTestImplementation(libs.kotlinTestAnnotations)
+    
+    androidTestImplementation(libs.ktorClientOkHttp)
+    androidTestImplementation(libs.kotlinTest)
+    androidTestImplementation(libs.kotlinTestJunit)
 
-    commonTestImplementation(libs.mokoTest)
+    iosTestImplementation(libs.ktorClientIos)
+}
+
+// now standard test task use --standalone but it broke network calls
+val newTestTask = tasks.create("iosX64TestWithNetwork") {
+    val linkTask = tasks.getByName("linkDebugTestIosX64") as org.jetbrains.kotlin.gradle.tasks.KotlinNativeLink
+    dependsOn(linkTask)
+
+    group = JavaBasePlugin.VERIFICATION_GROUP
+    description = "Runs tests for target 'ios' on an iOS simulator"
+
+    doLast {
+        val binary = linkTask.binary.outputFile
+        val device = "iPhone 8"
+        exec {
+            commandLine = listOf("xcrun", "simctl", "boot", device)
+            isIgnoreExitValue = true
+        }
+        exec {
+            commandLine = listOf(
+                "xcrun",
+                "simctl",
+                "spawn",
+                device,
+                binary.absolutePath
+            )
+        }
+        exec {
+            commandLine = listOf("xcrun", "simctl", "shutdown", device)
+        }
+    }
+}
+with(tasks.getByName("iosX64Test")) {
+    dependsOn(newTestTask)
+    onlyIf { false }
 }
