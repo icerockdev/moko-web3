@@ -86,6 +86,25 @@ class Web3(
         )
     }
 
+    suspend fun getEthTransactionCount(walletAddress: WalletAddress): BigInt {
+        val requestSerializer = InfuraRequest.serializer(String.serializer())
+        val request: InfuraRequest<String> = InfuraRequest(
+            method = "eth_getTransactionCount",
+            params = listOf(walletAddress.value, "latest")
+        )
+
+        val response: HttpResponse = httpClient.post {
+            url(infuraUrl)
+            body = json.encodeToJsonElement(requestSerializer, request).outgoingContent
+        }
+
+        return processResponse(
+            request = request,
+            serializer = InfuraResponse.serializer(BigIntSerializer),
+            content = response.readText()
+        )
+    }
+
     suspend fun <T> call(
         transactionCall: JsonElement,
         responseDataSerializer: KSerializer<T>

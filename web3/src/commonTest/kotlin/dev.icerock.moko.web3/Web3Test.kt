@@ -255,4 +255,20 @@ class Web3Test {
 
         println("balance $result")
     }
+
+    @Test
+    fun `get nonce`() {
+        val json = Json
+        val web3 = Web3(
+            httpClient = httpClient,
+            infuraUrl = infuraUrl,
+            json = json
+        )
+
+        val result = runTest {
+            web3.getEthTransactionCount(WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C"))
+        }
+
+        println("nonce $result")
+    }
 }
