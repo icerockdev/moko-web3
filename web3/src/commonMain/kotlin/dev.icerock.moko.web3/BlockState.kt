@@ -1,5 +1,7 @@
 package dev.icerock.moko.web3
 
+import kotlin.jvm.JvmInline
+
 
 interface BlockState {
     override fun toString(): String
@@ -14,7 +16,8 @@ interface BlockState {
         override fun toString() = "pending"
     }
 
-    class Quantity(private val blockNumber: String) : BlockState {
+    @JvmInline
+    value class Quantity(private val blockNumber: String) : BlockState {
         override fun toString() = blockNumber
     }
 }
