@@ -7,7 +7,7 @@ package dev.icerock.moko.web3
 import kotlin.jvm.JvmInline
 
 
-interface BlockState {
+sealed interface BlockState {
     override fun toString(): String
 
     object Latest : BlockState {
