@@ -25,6 +25,7 @@ This is a Kotlin MultiPlatform library that ...
 - kotlin 1.5.20
   - 0.1.0
   - 0.2.0
+  - 0.3.0
 
 ## Installation
 root build.gradle  
@@ -39,7 +40,7 @@ allprojects {
 project build.gradle
 ```groovy
 dependencies {
-    commonMainApi("dev.icerock.moko:web3:0.2.0")
+    commonMainApi("dev.icerock.moko:web3:0.3.0")
 }
 ```
 
