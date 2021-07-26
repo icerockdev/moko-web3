@@ -67,11 +67,11 @@ class Web3(
         )
     }
 
-    suspend fun getEthBalance(walletAddress: WalletAddress): BigInt {
+    suspend fun getEthBalance(walletAddress: WalletAddress, blockState: BlockState = BlockState.Latest): BigInt {
         val requestSerializer = InfuraRequest.serializer(String.serializer())
         val request: InfuraRequest<String> = InfuraRequest(
             method = "eth_getBalance",
-            params = listOf(walletAddress.value, "latest")
+            params = listOf(walletAddress.value, blockState.toString())
         )
 
         val response: HttpResponse = httpClient.post {
@@ -86,11 +86,14 @@ class Web3(
         )
     }
 
-    suspend fun getEthTransactionCount(walletAddress: WalletAddress): BigInt {
+    suspend fun getEthTransactionCount(
+        walletAddress: WalletAddress,
+        blockState: BlockState = BlockState.Pending
+    ): BigInt {
         val requestSerializer = InfuraRequest.serializer(String.serializer())
         val request: InfuraRequest<String> = InfuraRequest(
             method = "eth_getTransactionCount",
-            params = listOf(walletAddress.value, "latest")
+            params = listOf(walletAddress.value, blockState.toString())
         )
 
         val response: HttpResponse = httpClient.post {
@@ -107,14 +110,15 @@ class Web3(
 
     suspend fun <T> call(
         transactionCall: JsonElement,
-        responseDataSerializer: KSerializer<T>
+        responseDataSerializer: KSerializer<T>,
+        blockState: BlockState = BlockState.Latest,
     ): T {
         val requestSerializer = InfuraRequest.serializer(JsonElement.serializer())
         val request: InfuraRequest<JsonElement> = InfuraRequest(
             method = "eth_call",
             params = listOf(
                 transactionCall,
-                JsonPrimitive("latest")
+                JsonPrimitive(blockState.toString())
             )
         )
 
