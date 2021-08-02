@@ -6,16 +6,19 @@ package dev.icerock.moko.web3
 
 import dev.icerock.moko.web3.entity.InfuraRequest
 import dev.icerock.moko.web3.entity.Web3SocketResponse
+import dev.icerock.moko.web3.websockets.SubscriptionParam
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
@@ -26,19 +29,21 @@ class Web3Socket(
     private val httpClient: HttpClient,
     private val json: Json,
     private val webSocketUrl: String,
-    coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope
 ) {
 
     /**
      * channel to receive data from webSocket
      */
-    private val webSocketsSharedFlow: MutableSharedFlow<Web3SocketResponse> =
-        MutableSharedFlow(onBufferOverflow = BufferOverflow.SUSPEND)
+    private val responsesFlowSource: MutableSharedFlow<Web3SocketResponse> =
+        MutableSharedFlow()
+
+    val responsesFlow: SharedFlow<Web3SocketResponse> = responsesFlowSource.asSharedFlow()
 
     /**
      * subscription filter's flow, here we emit new
      */
-    private val subscriptionFlow: MutableSharedFlow<InfuraRequest<String>> =
+    private val requestsFlow: MutableSharedFlow<InfuraRequest<String>> =
         MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.SUSPEND)
 
     /**
@@ -50,103 +55,80 @@ class Web3Socket(
         // launch websocket connection to work with in over web3Socket lifecycle
         coroutineScope.launch {
             httpClient.webSocket(webSocketUrl) {
-                println("connection established!")
-                // when connection is established, we are going to map all the incoming messages to flow
-                val job = incoming
-                    .consumeAsFlow()
-                    .mapNotNull {
-                        (it as? Frame.Text)?.readText()
-                    }
-                    .map {
-                        json.decodeFromString(
-                            deserializer = Web3SocketResponse.serializer(),
-                            string = it
-                        )
-                    }
-                    .onEach {
-                        println("incoming message:  $it")
-                        webSocketsSharedFlow.emit(it)
-                    }
-                    .launchIn(this)
-                println("incoming messages setup finished")
-
-                subscriptionFlow
-                    .map {
+                requestsFlow
+                    .map { request ->
                         json.encodeToString(
                             serializer = InfuraRequest.serializer(String.serializer()),
-                            value = it
+                            value = request
                         )
                     }
-                    .map {
-                        Frame.Text(it)
-                    }.onEach {
-                        outgoing.send(it)
-                    }
+                    .map { encoded -> Frame.Text(encoded) }
+                    .onEach { frame -> outgoing.send(frame) }
                     .launchIn(this)
-                println("subscription flow setup finished")
-                job.join()
+
+                incoming
+                    .consumeAsFlow()
+                    .mapNotNull { frame ->
+                        val textFrame = frame as? Frame.Text
+                        return@mapNotNull textFrame?.readText()
+                    }
+                    .map { text ->
+                        json.decodeFromString(
+                            deserializer = Web3SocketResponse.serializer(),
+                            string = text
+                        )
+                    }
+                    .collect {
+                        responsesFlowSource.emit(it)
+                    }
             }
-            println("websocket closed")
         }
     }
+
+    suspend fun sendRpcRequest(request: InfuraRequest<String>): String? {
+        val id = request.id
+
+        coroutineScope.launch {
+            requestsFlow.emit(request)
+        }
+
+        return responsesFlowSource.first { it.id == id }.result
+    }
+
+
+    private val queueMutex = Mutex()
 
     /**
      * Subscription function for current filter
      * @param params parameters for infura subscription
      */
-    fun subscribeWebSocketWithFilter(params: List<String>): Flow<String> {
+    fun subscribeWebSocketWithFilter(params: List<SubscriptionParam>): Flow<String> {
         var subscriptionID: String? = null
         return flow {
-            subscriptionID = coroutineScope {
-                // for new subscription we increment queueID value
-                queueID++
-                // waiting for a first message that return request with id == queueID
-                val deferred = async {
-                    // Async call to filter from websocket by id that was inceremented
-                    println("start filtering by id=$queueID")
-                    webSocketsSharedFlow
-                        .filter {
-                            it.id == queueID
-                        }
-                        .mapNotNull {
-                            it.result
-                        }
-                        .first()
-                }
-                // send request to web socket to subscribe on filter
-                InfuraRequest(
-                    id = queueID,
-                    method = "eth_subscribe",
-                    params = params
-                ).also { request ->
-                    subscriptionFlow.emit(request)
-                }
-                // waiting for async result
-                println("waiting for filter result...")
-                deferred.await()
-            }
+            val id = queueMutex.withLock { queueID++ }
+            val request = InfuraRequest(
+                id = id,
+                method = "eth_subscribe",
+                params = params.map(SubscriptionParam::name)
+            )
+            subscriptionID = sendRpcRequest(request) ?: return@flow
 
-            // after we've got a subscriptionID, we can filter incoming messages by it
-            webSocketsSharedFlow
+            responsesFlowSource
                 .filter {
                     it.params?.subscription == subscriptionID
                 }.mapNotNull {
                     it.params?.result
-                }.onEach {
-                    emit(it)
-                }
-                .collect()
-        }
-            .onCompletion {
-            // unsubscribe by subscriptionID
+                }.collect(this::emit)
+        }.onCompletion {
             val subId = subscriptionID ?: return@onCompletion
-            InfuraRequest(
+            val request = InfuraRequest(
                 method = "eth_unsubscribe",
                 params = listOf(subId)
-            ).also { request ->
-                subscriptionFlow.emit(request)
-            }
-            println("$subId unsubscribed!")
+            )
+            sendRpcRequest(request)
         }
     }
+
+    fun subscribeWebSocketWithFilter(vararg filters: SubscriptionParam) =
+        subscribeWebSocketWithFilter(filters.toList())
 }

@@ -1,11 +1,16 @@
+@file:Suppress("EXPERIMENTAL_API_USAGE")
+
 package dev.icerock.moko.web3
 
+import dev.icerock.moko.web3.websockets.SubscriptionParam
 import dev.icerock.moko.web3.websockets.createHttpClientEngine
 import io.ktor.client.*
+import io.ktor.client.features.logging.*
 import io.ktor.client.features.websocket.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlin.test.BeforeTest
@@ -16,7 +21,7 @@ class Web3SocketTest {
     private lateinit var web3Socket: Web3Socket
 
     @BeforeTest
-    fun `create_socket`() {
+    fun `create socket`() {
         val json = Json {
             ignoreUnknownKeys = true
         }
@@ -35,13 +40,10 @@ class Web3SocketTest {
     }
 
     @Test
-    fun `test_web_socket_flow`() {
-        val subcriptionFilterTransactions: List<String> = listOf("newPendingTransactions")
+    fun `test web socket flow`() {
         runBlocking {
-            web3Socket.subscribeWebSocketWithFilter(subcriptionFilterTransactions)
-                .onEach {
-                    println(it)
-                }
+            web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.NewPendingTransactions)
+                .onEach(::println)
                 .onEmpty {
                     println("flow is empty")
                 }
@@ -50,19 +52,6 @@ class Web3SocketTest {
                     println("received on inherited channel: $it")
                 }
 
-            val subscriptionFilterHeads: List<String> = listOf("newHeads")
-
-            web3Socket.subscribeWebSocketWithFilter(subscriptionFilterHeads)
-                .onEach {
-                    println(it)
-                }
-                .onEmpty {
-                    println("flow is empty")
-                }
-                .take(2)
-                .collect {
-                    println("$it received on inherited channel")
-                }
         }
     }
 }
