@@ -10,6 +10,9 @@ plugins {
 }
 
 android {
+    defaultConfig {
+        multiDexEnabled = true
+    }
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
@@ -31,6 +34,7 @@ dependencies {
     androidTestImplementation(libs.ktorClientOkHttp)
     androidTestImplementation(libs.kotlinTest)
     androidTestImplementation(libs.kotlinTestJunit)
+    androidMainImplementation(libs.multidex)
 
     iosMainImplementation(libs.ktorClientIos)
     iosTestImplementation(libs.ktorClientIos)

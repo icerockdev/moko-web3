@@ -10,6 +10,7 @@ klockVersion = "2.2.2"
 ktorClientVersion = "1.6.1"
 mokoTestVersion = "0.4.0"
 mokoWeb3Version = "0.3.0"
+multidexVersion = "1.0.3"
 
 [libraries]
 appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidAppCompatVersion" }
@@ -37,3 +38,4 @@ kotlinTestCommon = { module = "org.jetbrains.kotlin:kotlin-test-common", version
 kotlinTestAnnotations = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "kotlinVersion" }
 kotlinTest = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinVersion" }
 kotlinTestJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinVersion" }
+multidex = { module = "androidx.multidex:multidex", version.ref = "multidexVersion" }
