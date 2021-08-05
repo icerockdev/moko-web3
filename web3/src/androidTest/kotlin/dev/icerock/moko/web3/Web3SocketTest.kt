@@ -1,3 +1,7 @@
+/*
+ * Copyright 2020 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
+ */
+
 @file:Suppress("EXPERIMENTAL_API_USAGE")
 
 package dev.icerock.moko.web3
@@ -22,9 +26,6 @@ class Web3SocketTest {
 
     @BeforeTest
     fun `create socket`() {
-        val json = Json {
-            ignoreUnknownKeys = true
-        }
         val httpClient = HttpClient(createHttpClientEngine()) {
             install(WebSockets) {
                 pingInterval = 30

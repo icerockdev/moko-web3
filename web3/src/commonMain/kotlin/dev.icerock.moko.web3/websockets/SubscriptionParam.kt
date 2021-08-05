@@ -1,3 +1,7 @@
+/*
+ * Copyright 2020 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
+ */
+
 package dev.icerock.moko.web3.websockets
 
 import dev.icerock.moko.web3.LogsWeb3SocketEvent
@@ -6,7 +10,6 @@ import dev.icerock.moko.web3.SyncingWeb3SocketEvent
 import dev.icerock.moko.web3.WalletAddress
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
