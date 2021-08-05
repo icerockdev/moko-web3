@@ -11,19 +11,19 @@ import kotlinx.serialization.Serializable
  * @param params information for subscribed events
  */
 @Serializable
-data class Web3SocketResponse(
+data class Web3SocketResponse<T>(
     val jsonrpc: String,
     val id: Int? = null,
-    val result: String? = null,
+    val result: T? = null,
     val method: String? = null,
-    val params: Web3SocketResponseParams? = null
+    val params: Web3SocketResponseParams<T>? = null
 )
 
 /**
  * data class that represents parameters info
  */
 @Serializable
-data class Web3SocketResponseParams(
+data class Web3SocketResponseParams<T>(
     val subscription: String,
-    val result: String
+    val result: T
 )

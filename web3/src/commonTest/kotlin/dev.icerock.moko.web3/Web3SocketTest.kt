@@ -27,7 +27,7 @@ class Web3SocketTest {
         }
         val httpClient = HttpClient(createHttpClientEngine()) {
             install(WebSockets) {
-
+                pingInterval = 30
             }
         }
 
@@ -42,7 +42,7 @@ class Web3SocketTest {
     @Test
     fun `test web socket flow`() {
         runBlocking {
-            web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.NewPendingTransactions)
+            web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.Logs)
                 .onEach(::println)
                 .onEmpty {
                     println("flow is empty")

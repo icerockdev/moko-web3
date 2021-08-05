@@ -1,11 +1,24 @@
 package dev.icerock.moko.web3.websockets
 
+import dev.icerock.moko.web3.LogsWeb3SocketEvent
+import dev.icerock.moko.web3.NewHeadsWeb3SocketEvent
+import dev.icerock.moko.web3.SyncingWeb3SocketEvent
 import dev.icerock.moko.web3.WalletAddress
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 
 
-sealed interface SubscriptionParam {
+/**
+ * @param TEvent event returned by websocket
+ */
+sealed interface SubscriptionParam<TEvent> {
     val name: String
-//    val additionalParams: Any? get() = null
+    val params: Map<String, JsonElement>? get() = null
+    val serializer: KSerializer<TEvent>
 
     /**
      * Subscribing to this, fires a notification each time a new header is appended to the chain,
@@ -13,8 +26,9 @@ sealed interface SubscriptionParam {
      * will emit all new headers for the new chain.
      * Therefore the subscription can emit multiple headers on the same height.
      */
-    object NewHeads : SubscriptionParam {
+    object NewHeads : SubscriptionParam<NewHeadsWeb3SocketEvent> {
         override val name: String = "newHeads"
+        override val serializer: KSerializer<NewHeadsWeb3SocketEvent> = NewHeadsWeb3SocketEvent.serializer()
     }
 
     /**
@@ -24,15 +38,24 @@ sealed interface SubscriptionParam {
      * up in the new chain are emitted.
      * Therefore a subscription can emit logs for the same transaction multiple times.
      */
-    // TODO
-//    sealed class Logs(
-//        private val addresses: List<WalletAddress> = listOf(),
-//        private val topics: List<String> = listOf()
-//    ) : SubscriptionParam {
-//        override val name: String = "logs"
-//        override val additionalParams: Any? = TODO()
-//        companion object : Logs()
-//    }
+    open class Logs private constructor(
+        addresses: List<WalletAddress>? = null,
+        topics: List<String>? = null
+    ) : SubscriptionParam<LogsWeb3SocketEvent> {
+        final override val name: String = "logs"
+        @OptIn(ExperimentalStdlibApi::class)
+        final override val params = buildMap<String, JsonElement> {
+            if(addresses != null)
+                put("address", Json.encodeToJsonElement(addresses.map(WalletAddress::value)))
+            if(topics != null)
+                put("topics", Json.encodeToJsonElement(topics))
+        }
+        final override val serializer: KSerializer<LogsWeb3SocketEvent> = LogsWeb3SocketEvent.serializer()
+
+        constructor(address: WalletAddress) : this(listOf(address), listOf())
+
+        companion object : Logs()
+    }
 
     /**
      * Returns the hash for all transactions that are added to the pending state and are signed
@@ -40,8 +63,9 @@ sealed interface SubscriptionParam {
      * the canonical chain isn't part of the new canonical chain after
      * a reogranization its again emitted.
      */
-    object NewPendingTransactions : SubscriptionParam {
+    object NewPendingTransactions : SubscriptionParam<String> {
         override val name: String = "newPendingTransactions"
+        override val serializer: KSerializer<String> = String.serializer()
     }
 
     /**
@@ -49,7 +73,8 @@ sealed interface SubscriptionParam {
      * The result can either be a boolean indicating that the synchronization has started (true),
      * finished (false) or an object with various progress indicators. NOT SUPPORTED ON KOVAN!
      */
-    object Syncing : SubscriptionParam {
+    object Syncing : SubscriptionParam<SyncingWeb3SocketEvent> {
         override val name: String = "syncing"
+        override val serializer: KSerializer<SyncingWeb3SocketEvent> = SyncingWeb3SocketEvent.serializer()
     }
 }

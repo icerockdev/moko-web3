@@ -16,10 +16,10 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 
 /**
  * Class to work with webSocket connection in Etherium network
@@ -27,7 +27,7 @@ import kotlinx.serialization.json.Json
  */
 class Web3Socket(
     private val httpClient: HttpClient,
-    private val json: Json,
+    val json: Json,
     private val webSocketUrl: String,
     private val coroutineScope: CoroutineScope
 ) {
@@ -35,15 +35,15 @@ class Web3Socket(
     /**
      * channel to receive data from webSocket
      */
-    private val responsesFlowSource: MutableSharedFlow<Web3SocketResponse> =
+    private val responsesFlowSource: MutableSharedFlow<Web3SocketResponse<JsonElement>> =
         MutableSharedFlow()
 
-    val responsesFlow: SharedFlow<Web3SocketResponse> = responsesFlowSource.asSharedFlow()
+    val responsesFlow: SharedFlow<Web3SocketResponse<JsonElement>> = responsesFlowSource.asSharedFlow()
 
     /**
      * subscription filter's flow, here we emit new
      */
-    private val requestsFlow: MutableSharedFlow<InfuraRequest<String>> =
+    private val requestsFlow: MutableSharedFlow<InfuraRequest<JsonElement>> =
         MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.SUSPEND)
 
     /**
@@ -58,7 +58,7 @@ class Web3Socket(
                 requestsFlow
                     .map { request ->
                         json.encodeToString(
-                            serializer = InfuraRequest.serializer(String.serializer()),
+                            serializer = InfuraRequest.serializer(JsonElement.serializer()),
                             value = request
                         )
                     }
@@ -74,7 +74,7 @@ class Web3Socket(
                     }
                     .map { text ->
                         json.decodeFromString(
-                            deserializer = Web3SocketResponse.serializer(),
+                            deserializer = Web3SocketResponse.serializer(JsonElement.serializer()),
                             string = text
                         )
                     }
@@ -85,7 +85,11 @@ class Web3Socket(
         }
     }
 
-    suspend fun sendRpcRequest(request: InfuraRequest<String>): String? {
+    suspend inline fun <reified T> sendRpcRequest(request: InfuraRequest<JsonElement>): T? {
+        val response = sendRpcRequestRaw(request) ?: return null
+        return json.decodeFromJsonElement(response)
+    }
+    suspend fun sendRpcRequestRaw(request: InfuraRequest<JsonElement>): JsonElement? {
         val id = request.id
 
         coroutineScope.launch {
@@ -100,35 +104,41 @@ class Web3Socket(
 
     /**
      * Subscription function for current filter
-     * @param params parameters for infura subscription
      */
-    fun subscribeWebSocketWithFilter(params: List<SubscriptionParam>): Flow<String> {
+    @OptIn(ExperimentalStdlibApi::class)
+    fun <T> subscribeWebSocketWithFilter(param: SubscriptionParam<T>): Flow<T> {
         var subscriptionID: String? = null
         return flow {
             val id = queueMutex.withLock { queueID++ }
             val request = InfuraRequest(
                 id = id,
                 method = "eth_subscribe",
-                params = params.map(SubscriptionParam::name)
+                params = buildList {
+                    add(json.encodeToJsonElement(param.name))
+                    if(param.params != null)
+                        add(json.encodeToJsonElement(param.params))
+                }
             )
             subscriptionID = sendRpcRequest(request) ?: return@flow
 
-            responsesFlowSource
+            val responses = responsesFlowSource
                 .filter {
                     it.params?.subscription == subscriptionID
                 }.mapNotNull {
-                    it.params?.result
-                }.collect(this::emit)
+                    json.decodeFromJsonElement (
+                        param.serializer,
+                        element = it.params?.result ?: return@mapNotNull null
+                    )
+                }
+
+            emitAll(responses)
         }.onCompletion {
             val subId = subscriptionID ?: return@onCompletion
             val request = InfuraRequest(
                 method = "eth_unsubscribe",
-                params = listOf(subId)
+                params = listOf(json.encodeToJsonElement(subId))
             )
-            sendRpcRequest(request)
+            sendRpcRequestRaw(request).also(::println)
         }
     }
-
-    fun subscribeWebSocketWithFilter(vararg filters: SubscriptionParam) =
-        subscribeWebSocketWithFilter(filters.toList())
 }
