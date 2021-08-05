@@ -33,7 +33,6 @@ class Web3SocketTest {
 
         web3Socket = Web3Socket(
             httpClient = httpClient,
-            json = json,
             webSocketUrl = "wss://rinkeby.infura.io/ws/v3/59d7fae3226b40e09d84d713e588305b",
             coroutineScope = GlobalScope
         )
@@ -48,10 +47,23 @@ class Web3SocketTest {
                     println("flow is empty")
                 }
                 .take(2)
-                .collect {
-                    println("received on inherited channel: $it")
-                }
+                .launchIn(scope = this)
 
+            web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.Logs)
+                .onEach(::println)
+                .onEmpty {
+                    println("flow is empty")
+                }
+                .take(2)
+                .launchIn(scope = this)
+
+            web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.Logs)
+                .onEach(::println)
+                .onEmpty {
+                    println("flow is empty")
+                }
+                .take(2)
+                .launchIn(scope = this)
         }
     }
 }

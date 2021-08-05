@@ -11,7 +11,7 @@ import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -27,11 +27,13 @@ import kotlinx.serialization.json.encodeToJsonElement
  */
 class Web3Socket(
     private val httpClient: HttpClient,
-    val json: Json,
     private val webSocketUrl: String,
     private val coroutineScope: CoroutineScope
 ) {
-
+    val json = Json {
+        isLenient = true
+        ignoreUnknownKeys = true
+    }
     /**
      * channel to receive data from webSocket
      */
@@ -41,30 +43,30 @@ class Web3Socket(
     val responsesFlow: SharedFlow<Web3SocketResponse<JsonElement>> = responsesFlowSource.asSharedFlow()
 
     /**
-     * subscription filter's flow, here we emit new
-     */
-    private val requestsFlow: MutableSharedFlow<InfuraRequest<JsonElement>> =
-        MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.SUSPEND)
-
-    /**
      * incremental field to filter different incoming messages from websocket
      */
     private var queueID: Int = 0
+
+    /**
+     * subscription filter's flow, here we emit new
+     */
+    private val requestsChannel: Channel<InfuraRequest<JsonElement>> = Channel(capacity = 1)
 
     init {
         // launch websocket connection to work with in over web3Socket lifecycle
         coroutineScope.launch {
             httpClient.webSocket(webSocketUrl) {
-                requestsFlow
+                requestsChannel
+                    .consumeAsFlow()
                     .map { request ->
                         json.encodeToString(
                             serializer = InfuraRequest.serializer(JsonElement.serializer()),
                             value = request
                         )
                     }
-                    .map { encoded -> Frame.Text(encoded) }
-                    .onEach { frame -> outgoing.send(frame) }
-                    .launchIn(this)
+                    .map(Frame::Text)
+                    .onEach(outgoing::send)
+                    .launchIn(scope = this)
 
                 incoming
                     .consumeAsFlow()
@@ -93,7 +95,7 @@ class Web3Socket(
         val id = request.id
 
         coroutineScope.launch {
-            requestsFlow.emit(request)
+            requestsChannel.send(request)
         }
 
         return responsesFlowSource.first { it.id == id }.result
@@ -138,7 +140,7 @@ class Web3Socket(
                 method = "eth_unsubscribe",
                 params = listOf(json.encodeToJsonElement(subId))
             )
-            sendRpcRequestRaw(request).also(::println)
+            sendRpcRequestRaw(request)
         }
     }
 }
