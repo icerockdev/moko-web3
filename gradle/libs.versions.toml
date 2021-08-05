@@ -10,7 +10,7 @@ klockVersion = "2.2.2"
 ktorClientVersion = "1.6.1"
 mokoTestVersion = "0.4.0"
 mokoWeb3Version = "0.3.0"
-multidexVersion = "1.0.3"
+multidexVersion = "2.0.1"
 
 [libraries]
 appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidAppCompatVersion" }
