@@ -43,25 +43,16 @@ class Web3SocketTest {
         runBlocking {
             web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.Logs)
                 .onEach(::println)
-                .onEmpty {
-                    println("flow is empty")
-                }
                 .take(2)
                 .launchIn(scope = this)
 
             web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.Logs)
                 .onEach(::println)
-                .onEmpty {
-                    println("flow is empty")
-                }
                 .take(2)
                 .launchIn(scope = this)
 
             web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.Logs)
                 .onEach(::println)
-                .onEmpty {
-                    println("flow is empty")
-                }
                 .take(2)
                 .launchIn(scope = this)
         }
