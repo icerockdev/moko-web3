@@ -19,4 +19,11 @@ data class InfuraRequest<T>(
         method = method,
         params = params
     )
+
+    constructor(method: String, id: Int, params: List<T>) : this(
+        jsonrpc = "2.0",
+        id = id,
+        method = method,
+        params = params
+    )
 }

@@ -9,6 +9,12 @@ plugins {
     id("kotlinx-serialization")
 }
 
+android {
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+}
+
 dependencies {
     commonMainImplementation(libs.coroutines)
     commonMainImplementation(libs.kbignum)
@@ -16,14 +22,17 @@ dependencies {
     commonMainImplementation(libs.klock)
     commonMainImplementation(libs.ktorClient)
     commonMainImplementation(libs.ktorClientLogigng)
+    commonMainImplementation(libs.ktorWebsockets)
     
     commonTestImplementation(libs.kotlinTestCommon)
     commonTestImplementation(libs.kotlinTestAnnotations)
-    
+
+    androidMainImplementation(libs.ktorClientOkHttp)
     androidTestImplementation(libs.ktorClientOkHttp)
     androidTestImplementation(libs.kotlinTest)
     androidTestImplementation(libs.kotlinTestJunit)
 
+    iosMainImplementation(libs.ktorClientIos)
     iosTestImplementation(libs.ktorClientIos)
 }
 
