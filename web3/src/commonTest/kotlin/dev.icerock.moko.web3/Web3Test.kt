@@ -17,8 +17,43 @@ import io.ktor.client.features.logging.LogLevel
 import io.ktor.client.features.logging.Logger
 import io.ktor.client.features.logging.Logging
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
 import kotlin.test.Test
 import kotlin.test.assertEquals
+
+// language=json
+private const val testAbiRaw = """
+    [
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "address"
+                },
+                {
+                    "name": "int",
+                    "type": "uint256"
+                },
+                {
+                    "name": "list",
+                    "type": "uint256[]"
+                }
+            ],
+            "name": "test",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ]
+"""
+private fun createTestAbi(json: Json) = json.parseToJsonElement(testAbiRaw).jsonArray
 
 class Web3Test {
     private val infuraUrl = "https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62"
@@ -170,7 +205,7 @@ class Web3Test {
 
     @Test
     fun `address encoding`() {
-        val param = AddressParam()
+        val param = AddressParam
         val addr = "9a0A2498Ec7f105ef65586592a5B6d4Da3590D74".bi(16)
         val result = param.encode(addr)
         val hex = result.toHex()
@@ -189,7 +224,7 @@ class Web3Test {
 
     @Test
     fun `unit256 encoding`() {
-        val param = UInt256Param()
+        val param = UInt256Param
         val input = "1234567891011adfdfdeadfea123d34cd342dcd234234ffeedd342432ddff555".bi(16)
         val result = param.encode(input)
         val hex = result.toHex()
@@ -216,26 +251,27 @@ class Web3Test {
         )
         val smartContract = SmartContract(
             web3 = web3,
-            contractAddress = ContractAddress("0x5592ec0cfb4dbc12d3ab100b257153436a1f0fea"),
-            abiJson = createErc20TokenAbi(json)
+            contractAddress = ContractAddress(value = "NO-NEED"),
+            abiJson = createTestAbi(json)
         )
 
-        val to = "9a0A2498Ec7f105ef65586592a5B6d4Da3590D74".bi(16)
-        val sum = "16345785d8a0000".bi(16)
+        val address = "9a0A2498Ec7f105ef65586592a5B6d4Da3590D74".bi(16)
+        val bigInt = "16345785d8a0000".bi(16)
+        val list = listOf(address, bigInt)
 
         val result = runTest {
             smartContract.encodeTransaction(
-                method = "transfer",
-                from = WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C"),
+                method = "test",
                 params = listOf(
-                    to,
-                    sum
+                    address,
+                    bigInt,
+                    list
                 )
             )
         }
-
+        println(result)
         assertEquals(
-            expected = "0xa9059cbb0000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000",
+            expected = "0x34ba830c0000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000020000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000",
             actual = result.data
         )
     }
