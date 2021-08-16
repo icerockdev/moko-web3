@@ -1,7 +1,8 @@
+![moko-web3](https://user-images.githubusercontent.com/5010169/128702515-fc3928c7-d391-4234-9caa-15ab265cd7c1.png)  
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0) [![Download](https://img.shields.io/maven-central/v/dev.icerock.moko/web3) ](https://repo1.maven.org/maven2/dev/icerock/moko/web3/) ![kotlin-version](https://kotlin-version.aws.icerock.dev/kotlin-version?group=dev.icerock.moko&name=web3)
 
 # Mobile Kotlin web3
-This is a Kotlin MultiPlatform library that ...
+This is a Kotlin MultiPlatform library that allow you to interact with ethereum networks by Web3 protocol.
 
 ## Table of Contents
 - [Features](#features)
@@ -34,7 +35,7 @@ allprojects {
 project build.gradle
 ```groovy
 dependencies {
-    commonMainApi("dev.icerock.moko:web3:0.4.0")
+    commonMainApi("dev.icerock.moko:web3:0.5.0")
 }
 ```
 

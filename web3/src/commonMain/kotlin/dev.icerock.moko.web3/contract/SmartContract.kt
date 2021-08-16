@@ -5,6 +5,7 @@
 package dev.icerock.moko.web3.contract
 
 import com.soywiz.kbignum.BigInt
+import com.soywiz.kbignum.bi
 import dev.icerock.moko.web3.ContractAddress
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
@@ -61,7 +62,7 @@ class SmartContract(
     }
 
     fun signTransaction(data: JsonElement): String {
-        return TODO()
+        TODO()
     }
 
     fun encodeTransaction(
@@ -79,6 +80,9 @@ class SmartContract(
         )
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> Encoder<T>.encodeUnchecked(value: Any) = encode(value as T)
+
     private fun createCallData(method: String, params: List<Any>): String {
         val methodAbi: JsonObject = methodsAbi[method] ?: throw AbiMethodNotFoundException(
             method,
@@ -88,16 +92,52 @@ class SmartContract(
             methodAbi.getValue("inputs").jsonArray.map { it.jsonObject }
 
         val methodSignature: ByteArray = generateMethodSignature(method, inputParams)
-        val paramsEncoded: List<ByteArray> = params.mapIndexed { index, data ->
-            val typeString: String = inputParams[index].getValue("type").jsonPrimitive.content
-            val encoder: Encoder<Any> = createParamByType(typeString)
-            encoder.encode(data)
+
+        val paramsEncoders = params.indices
+            .map { index -> inputParams[index].getValue("type").jsonPrimitive.content }
+            .map(::resolveEncoderForType)
+
+        val headPartiallyEncoded = paramsEncoders
+            .zip(params)
+            .map { (encoder, param) ->
+                when(encoder) {
+                    is StaticEncoder<*> -> EncodedPart.StaticPart(encoder.encodeUnchecked(param))
+                    is DynamicEncoder<*> -> EncodedPart.DynamicPart(encoder.encodeUnchecked(param))
+                }
+            }
+
+        val dynamicPartsSizes = headPartiallyEncoded
+            .runningFold(initial = headPartiallyEncoded.size * PART_SIZE) { acc: Int, encodedPart: EncodedPart ->
+                when(encodedPart) {
+                    is EncodedPart.DynamicPart -> acc + encodedPart.encoded.size
+                    is EncodedPart.StaticPart -> acc
+                }
+            }
+
+        val headEncoded = headPartiallyEncoded
+            .mapIndexed { index, encodedPart ->
+                if(encodedPart is EncodedPart.StaticPart)
+                    encodedPart.encoded
+                else
+                    UInt256Param.encode(dynamicPartsSizes[index].bi)
+            }.fold(byteArrayOf()) { acc, part -> acc + part }
+
+        val dynamicPartEncoded = headPartiallyEncoded
+            .filterIsInstance<EncodedPart.DynamicPart>()
+            .fold(byteArrayOf()) { acc, part -> acc + part.encoded }
+
+        val data = methodSignature + headEncoded + dynamicPartEncoded
+
+        return "0x" + data.toHex().lowercase()
+    }
+
+    private val listTypeRegex = Regex("(.*)\\[]")
+    private fun resolveEncoderForType(typeAnnotation: String) = when {
+        typeAnnotation.matches(listTypeRegex) -> {
+            val (subtypeAnnotation) = listTypeRegex.find(typeAnnotation)!!.destructured
+            ListParam(StaticEncoders.forType(subtypeAnnotation).encoder)
         }
-
-        val data: ByteArray =
-            paramsEncoded.fold(methodSignature) { accumulated, item -> accumulated.plus(item) }
-
-        return "0x" + data.toHex().toLowerCase()
+        else -> StaticEncoders.forType(typeAnnotation).encoder
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -118,12 +158,27 @@ class SmartContract(
         return sha3.copyOf(4)
     }
 
-    private fun createParamByType(type: String): Encoder<Any> {
-        @Suppress("UNCHECKED_CAST")
-        return when (type) {
-            "uint256" -> UInt256Param() as Encoder<Any>
-            "address" -> AddressParam() as Encoder<Any>
-            else -> TODO()
-        }
+    companion object {
+        internal const val PART_SIZE = 32
     }
+}
+
+/**
+ * First iteration while encoding is an iteration when all static params encoded,
+ * while dynamic params replaced with DynamicPass, later it is being replaced with encoded
+ * dynamic params
+ */
+private sealed interface EncodedPart {
+    val encoded: ByteArray
+    class DynamicPart(override val encoded: ByteArray) : EncodedPart
+    class StaticPart(override val encoded: ByteArray) : EncodedPart
+}
+
+/**
+ * First iteration while decoding is an iteration over params head, at that moment,
+ * static types are fully decoded, while for dynamic types only offset decoded
+ */
+private sealed interface DecodedPart {
+    class PartiallyDynamic(val offset: Int) : DecodedPart
+    class Fully(val value: Any) : DecodedPart
 }
