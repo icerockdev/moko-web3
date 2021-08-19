@@ -17,49 +17,14 @@ import io.ktor.client.features.logging.LogLevel
 import io.ktor.client.features.logging.Logger
 import io.ktor.client.features.logging.Logging
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
-// language=json
-private const val testAbiRaw = """
-    [
-        {
-            "constant": false,
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "address"
-                },
-                {
-                    "name": "int",
-                    "type": "uint256"
-                },
-                {
-                    "name": "list",
-                    "type": "uint256[]"
-                }
-            ],
-            "name": "test",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }
-    ]
-"""
-private fun createTestAbi(json: Json) = json.parseToJsonElement(testAbiRaw).jsonArray
 
 class Web3Test {
     private val infuraUrl = "https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62"
     private val httpClient: HttpClient = HttpClient() {
-        install(Logging){
-            logger = object :Logger{
+        install(Logging) {
+            logger = object : Logger {
                 override fun log(message: String) {
                     println(message)
                 }
@@ -75,7 +40,8 @@ class Web3Test {
             infuraUrl = infuraUrl,
             json = Json
         )
-        val txHash = TransactionHash("0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352")
+        val txHash =
+            TransactionHash("0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352")
 
         val result = runTest {
             web3.getTransaction(txHash)
@@ -115,7 +81,8 @@ class Web3Test {
             infuraUrl = infuraUrl,
             json = Json
         )
-        val txHash = TransactionHash("0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352")
+        val txHash =
+            TransactionHash("0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352")
 
         val result = runTest {
             web3.getTransactionReceipt(txHash)
