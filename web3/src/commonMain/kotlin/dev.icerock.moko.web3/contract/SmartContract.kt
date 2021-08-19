@@ -10,9 +10,11 @@ import dev.icerock.moko.web3.ContractAddress
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
 import dev.icerock.moko.web3.Web3
+import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.crypto.KeccakParameter
 import dev.icerock.moko.web3.crypto.digestKeccak
 import dev.icerock.moko.web3.crypto.toHex
+import dev.icerock.moko.web3.requests.Web3Requests
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -36,17 +38,34 @@ class SmartContract(
         .filter { it.containsKey("name") }
         .associateBy { it.getValue("name").jsonPrimitive.content }
 
+    fun <T> readRequest(
+        method: String,
+        params: List<Any>,
+        from: WalletAddress? = null,
+        dataSerializer: KSerializer<T>
+    ): Web3RpcRequest<JsonElement, T> {
+        val transactionCall = encodeTransaction(method, params, from)
+        val data = json.encodeToJsonElement(ContractRPC.serializer(), transactionCall)
+        return Web3Requests.call(data, dataSerializer)
+    }
+
     suspend fun <T> read(
         method: String,
         params: List<Any>,
         from: WalletAddress? = null,
         dataSerializer: KSerializer<T>
-    ): T {
-        val transactionCall = encodeTransaction(method, params, from)
+    ): T = web3.executeBatch(readRequest(method, params, from, dataSerializer))[0]
+
+    fun writeRequest(
+        method: String,
+        params: List<Any>,
+        from: WalletAddress? = null,
+        value: BigInt?
+    ): Web3RpcRequest<String, String> {
+        val transactionCall = encodeTransaction(method, params, from, value)
         val data = json.encodeToJsonElement(ContractRPC.serializer(), transactionCall)
-        // TODO use output format from ABI to correct parse data
-        //  for example uniswap respond with more data and we should parse it by ABI spec
-        return web3.call(data, dataSerializer)
+        val signedTransaction: String = signTransaction(data)
+        return Web3Requests.send(signedTransaction)
     }
 
     suspend fun write(
@@ -54,12 +73,9 @@ class SmartContract(
         params: List<Any>,
         from: WalletAddress? = null,
         value: BigInt?
-    ): TransactionHash {
-        val transactionCall = encodeTransaction(method, params, from, value)
-        val data = json.encodeToJsonElement(ContractRPC.serializer(), transactionCall)
-        val signedTransaction: String = signTransaction(data)
-        return web3.send(signedTransaction)
-    }
+    ): TransactionHash = web3.executeBatch(
+        writeRequest(method, params, from, value)
+    )[0].let(::TransactionHash)
 
     fun signTransaction(data: JsonElement): String {
         TODO()
