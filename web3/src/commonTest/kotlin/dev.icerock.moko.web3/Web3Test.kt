@@ -12,6 +12,7 @@ import dev.icerock.moko.web3.contract.UInt256Param
 import dev.icerock.moko.web3.contract.createErc20TokenAbi
 import dev.icerock.moko.web3.crypto.toHex
 import dev.icerock.moko.web3.entity.TransactionReceipt
+import dev.icerock.moko.web3.requests.Web3Requests
 import io.ktor.client.HttpClient
 import io.ktor.client.features.logging.LogLevel
 import io.ktor.client.features.logging.Logger
@@ -306,5 +307,25 @@ class Web3Test {
         }
 
         println("nonce $result")
+    }
+
+    @Test
+    fun `batch test`() {
+        val json = Json
+        val web3 = Web3(
+            httpClient = httpClient,
+            infuraUrl = infuraUrl,
+            json = json
+        )
+        val wallet = WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C")
+
+        val (nonce, balance) = runTest {
+            web3.executeBatch(
+                Web3Requests.getEthTransactionCount(wallet),
+                Web3Requests.getEthBalance(wallet),
+            )
+        }
+
+        println("nonce $nonce; balance $balance")
     }
 }
