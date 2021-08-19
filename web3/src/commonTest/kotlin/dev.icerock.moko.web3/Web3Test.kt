@@ -337,4 +337,18 @@ class Web3Test {
             actual = balance
         )
     }
+
+    @Test
+    fun `gas prise test`() {
+        val json = Json
+        val web3 = Web3(
+            httpClient = httpClient,
+            infuraUrl = infuraUrl,
+            json = json
+        )
+
+        runTest {
+            println(web3.getGasPrice())
+        }
+    }
 }
