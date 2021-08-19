@@ -339,7 +339,7 @@ class Web3Test {
     }
 
     @Test
-    fun `gas prise test`() {
+    fun `gas price test`() {
         val json = Json
         val web3 = Web3(
             httpClient = httpClient,
