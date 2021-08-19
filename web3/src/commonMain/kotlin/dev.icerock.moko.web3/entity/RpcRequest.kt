@@ -7,7 +7,7 @@ package dev.icerock.moko.web3.entity
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class InfuraRequest<T>(
+data class RpcRequest<out T>(
     val jsonrpc: String,
     val id: Int,
     val method: String,

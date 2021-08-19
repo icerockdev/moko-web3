@@ -4,7 +4,7 @@
 
 package dev.icerock.moko.web3
 
-import dev.icerock.moko.web3.entity.InfuraRequest
+import dev.icerock.moko.web3.entity.RpcRequest
 import dev.icerock.moko.web3.entity.Web3SocketResponse
 import dev.icerock.moko.web3.websockets.SubscriptionParam
 import io.ktor.client.*
@@ -50,7 +50,7 @@ class Web3Socket(
     /**
      * subscription filter's flow, here we emit new
      */
-    private val requestsChannel: Channel<InfuraRequest<JsonElement>> = Channel(capacity = 1)
+    private val requestsChannel: Channel<RpcRequest<JsonElement>> = Channel(capacity = 1)
 
     init {
         // launch websocket connection to work with in over web3Socket lifecycle
@@ -60,7 +60,7 @@ class Web3Socket(
                     .consumeAsFlow()
                     .map { request ->
                         json.encodeToString(
-                            serializer = InfuraRequest.serializer(JsonElement.serializer()),
+                            serializer = RpcRequest.serializer(JsonElement.serializer()),
                             value = request
                         )
                     }
@@ -87,11 +87,11 @@ class Web3Socket(
         }
     }
 
-    suspend inline fun <reified T> sendRpcRequest(request: InfuraRequest<JsonElement>): T? {
+    suspend inline fun <reified T> sendRpcRequest(request: RpcRequest<JsonElement>): T? {
         val response = sendRpcRequestRaw(request) ?: return null
         return json.decodeFromJsonElement(response)
     }
-    suspend fun sendRpcRequestRaw(request: InfuraRequest<JsonElement>): JsonElement? {
+    suspend fun sendRpcRequestRaw(request: RpcRequest<JsonElement>): JsonElement? {
         val id = request.id
 
         coroutineScope.launch {
@@ -112,7 +112,7 @@ class Web3Socket(
         var subscriptionID: String? = null
         return flow {
             val id = queueMutex.withLock { queueID++ }
-            val request = InfuraRequest(
+            val request = RpcRequest(
                 id = id,
                 method = "eth_subscribe",
                 params = buildList {
@@ -136,7 +136,7 @@ class Web3Socket(
             emitAll(responses)
         }.onCompletion {
             val subId = subscriptionID ?: return@onCompletion
-            val request = InfuraRequest(
+            val request = RpcRequest(
                 method = "eth_unsubscribe",
                 params = listOf(json.encodeToJsonElement(subId))
             )

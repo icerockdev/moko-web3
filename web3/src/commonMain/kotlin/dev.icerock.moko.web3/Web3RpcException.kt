@@ -4,10 +4,10 @@
 
 package dev.icerock.moko.web3
 
-import dev.icerock.moko.web3.entity.InfuraRequest
+import dev.icerock.moko.web3.entity.RpcRequest
 
 data class Web3RpcException(
     val code: Int,
     override val message: String,
-    val request: InfuraRequest<*>
+    val request: RpcRequest<*>
 ) : Exception(message)
