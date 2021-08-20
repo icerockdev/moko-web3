@@ -67,7 +67,7 @@ class Web3(
         value = executeBatch(Web3Requests.send(signedTransaction)).first()
     )
 
-    suspend fun getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice())[0]
+    suspend fun getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
 
     suspend fun <T, R> executeBatch(vararg requests: Web3RpcRequest<T, R>): List<R> {
         // Used later for logging if exception
