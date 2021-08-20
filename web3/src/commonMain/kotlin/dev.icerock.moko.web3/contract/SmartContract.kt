@@ -54,7 +54,7 @@ class SmartContract(
         params: List<Any>,
         from: WalletAddress? = null,
         dataSerializer: KSerializer<T>
-    ): T = web3.executeBatch(readRequest(method, params, from, dataSerializer))[0]
+    ): T = web3.executeBatch(readRequest(method, params, from, dataSerializer)).first()
 
     fun writeRequest(
         method: String,
@@ -75,7 +75,7 @@ class SmartContract(
         value: BigInt?
     ): TransactionHash = web3.executeBatch(
         writeRequest(method, params, from, value)
-    )[0].let(::TransactionHash)
+    ).first().let(::TransactionHash)
 
     fun signTransaction(data: JsonElement): String {
         TODO()

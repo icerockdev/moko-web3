@@ -39,32 +39,32 @@ class Web3(
 ) {
     suspend fun getTransaction(
         transactionHash: TransactionHash
-    ): Transaction = executeBatch(Web3Requests.getTransaction(transactionHash))[0]
+    ): Transaction = executeBatch(Web3Requests.getTransaction(transactionHash)).first()
 
     suspend fun getTransactionReceipt(
         transactionHash: TransactionHash
-    ): TransactionReceipt = executeBatch(Web3Requests.getTransactionReceipt(transactionHash))[0]
+    ): TransactionReceipt = executeBatch(Web3Requests.getTransactionReceipt(transactionHash)).first()
 
     suspend fun getEthBalance(
         walletAddress: WalletAddress,
         blockState: BlockState = BlockState.Latest
-    ): BigInt = executeBatch(Web3Requests.getEthBalance(walletAddress, blockState))[0]
+    ): BigInt = executeBatch(Web3Requests.getEthBalance(walletAddress, blockState)).first()
 
     suspend fun getEthTransactionCount(
         walletAddress: WalletAddress,
         blockState: BlockState = BlockState.Pending
-    ): BigInt = executeBatch(Web3Requests.getEthTransactionCount(walletAddress, blockState))[0]
+    ): BigInt = executeBatch(Web3Requests.getEthTransactionCount(walletAddress, blockState)).first()
 
     suspend fun <T> call(
         transactionCall: JsonElement,
         responseDataSerializer: KSerializer<T>,
         blockState: BlockState = BlockState.Latest,
-    ): T = executeBatch(Web3Requests.call(transactionCall, responseDataSerializer, blockState))[0]
+    ): T = executeBatch(Web3Requests.call(transactionCall, responseDataSerializer, blockState)).first()
 
     suspend fun send(
         signedTransaction: String
     ) = TransactionHash(
-        value = executeBatch(Web3Requests.send(signedTransaction))[0]
+        value = executeBatch(Web3Requests.send(signedTransaction)).first()
     )
 
     suspend fun <T, R> executeBatch(vararg requests: Web3RpcRequest<T, R>): List<R> {
