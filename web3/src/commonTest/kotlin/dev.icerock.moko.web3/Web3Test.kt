@@ -348,7 +348,10 @@ class Web3Test {
         )
 
         runTest {
-            println(web3.getGasPrice())
+            assertEquals(
+                expected = 1000000008.bi,
+                actual = web3.getGasPrice()
+            )
         }
     }
 }
