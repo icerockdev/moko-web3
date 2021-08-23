@@ -31,6 +31,7 @@ kotlinSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-js
 ktorClient = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientVersion" }
 ktorClientLogigng = { module = "io.ktor:ktor-client-logging", version.ref = "ktorClientVersion" }
 ktorClientOkHttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientVersion" }
+ktorClientMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorClientVersion" }
 ktorWebsockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktorClientVersion" }
 ktorClientIos = { module = "io.ktor:ktor-client-ios", version.ref = "ktorClientVersion" }
 klock = { module = "com.soywiz.korlibs.klock:klock", version.ref = "klockVersion" }

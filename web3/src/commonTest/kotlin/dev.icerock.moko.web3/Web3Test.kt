@@ -11,67 +11,33 @@ import dev.icerock.moko.web3.contract.SmartContract
 import dev.icerock.moko.web3.contract.UInt256Param
 import dev.icerock.moko.web3.contract.createErc20TokenAbi
 import dev.icerock.moko.web3.crypto.toHex
+import dev.icerock.moko.web3.entity.RpcRequest
 import dev.icerock.moko.web3.entity.TransactionReceipt
+import dev.icerock.moko.web3.requests.Web3Requests
 import io.ktor.client.HttpClient
-import io.ktor.client.features.logging.LogLevel
-import io.ktor.client.features.logging.Logger
-import io.ktor.client.features.logging.Logging
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.respondBadRequest
+import io.ktor.content.TextContent
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
-// language=json
-private const val testAbiRaw = """
-    [
-        {
-            "constant": false,
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "address"
-                },
-                {
-                    "name": "int",
-                    "type": "uint256"
-                },
-                {
-                    "name": "list",
-                    "type": "uint256[]"
-                }
-            ],
-            "name": "test",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }
-    ]
-"""
-private fun createTestAbi(json: Json) = json.parseToJsonElement(testAbiRaw).jsonArray
+import kotlin.test.assertTrue
 
 class Web3Test {
     private val infuraUrl = "https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62"
-    private val httpClient: HttpClient = HttpClient() {
-        install(Logging){
-            logger = object :Logger{
-                override fun log(message: String) {
-                    println(message)
-                }
-            }
-            level = LogLevel.ALL
-        }
-    }
 
     @Test
     fun `read transaction`() {
         val web3 = Web3(
-            httpClient = httpClient,
+            httpClient = createMockClient { request ->
+                val body = request.body
+                assertTrue(body is TextContent)
+                assertEquals(
+                    expected = """[{"jsonrpc":"2.0","id":0,"method":"eth_getTransactionByHash","params":["0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352"]}]""",
+                    actual = body.text
+                )
+                respond(content = """[{"jsonrpc":"2.0","id":0,"result":{"blockHash":"0x3d62f862d25cf7015a485868b07825484fd7a51f77a9e7863fe45ec8a61db01b","blockNumber":"0x60f03b","from":"0xde7ec4e4895d7d148906a0dfaaf7f21ac5c5b80c","gas":"0x4e9e4","gasPrice":"0x1dcd65000","hash":"0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352","input":"0x852a12e300000000000000000000000000000000000000000000000000470de4df820000","nonce":"0x4a","r":"0x5aeca7a54ae3bb0f67a29aece00d71bc75c0d06b89950ea600a0b3b6bbfe5e8c","s":"0x68fefa5333e94443dca19e30562bf297b8a687abf15c3fe2671de6233299fff0","to":"0xd6801a1dffcd0a410336ef88def4320d6df1883e","transactionIndex":"0x1","type":"0x0","v":"0x2c","value":"0x0"}}]""")
+            },
             infuraUrl = infuraUrl,
             json = Json
         )
@@ -111,7 +77,15 @@ class Web3Test {
     @Test
     fun `read transaction receipt`() {
         val web3 = Web3(
-            httpClient = httpClient,
+            httpClient = createMockClient { request ->
+                val body = request.body
+                assertTrue(body is TextContent)
+                assertEquals(
+                    expected = """[{"jsonrpc":"2.0","id":0,"method":"eth_getTransactionReceipt","params":["0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352"]}]""",
+                    actual = body.text
+                )
+                respond(content = """[{"jsonrpc":"2.0","id":0,"result":{"blockHash":"0x3d62f862d25cf7015a485868b07825484fd7a51f77a9e7863fe45ec8a61db01b","blockNumber":"0x60f03b","contractAddress":null,"cumulativeGasUsed":"0x3ae8d","effectiveGasPrice":"0x1dcd65000","from":"0xde7ec4e4895d7d148906a0dfaaf7f21ac5c5b80c","gasUsed":"0x34725","logs":[{"address":"0xd6801a1dffcd0a410336ef88def4320d6df1883e","blockHash":"0x3d62f862d25cf7015a485868b07825484fd7a51f77a9e7863fe45ec8a61db01b","blockNumber":"0x60f03b","data":"0x00000000000000000000000000000000000000000000000000078a9f2e72421c000000000000000000000000000000000000000000000000103938f95c5bb8de00000000000000000000000000000000000000000000007e6f395eb639577b12","logIndex":"0x0","removed":false,"topics":["0x875352fb3fadeb8c0be7cbbe8ff761b308fa7033470cd0287f02f3436fd76cb9"],"transactionHash":"0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352","transactionIndex":"0x1"},{"address":"0xd6801a1dffcd0a410336ef88def4320d6df1883e","blockHash":"0x3d62f862d25cf7015a485868b07825484fd7a51f77a9e7863fe45ec8a61db01b","blockNumber":"0x60f03b","data":"0x00000000000000000000000000000000000000000000000000000000052f2dd9","logIndex":"0x1","removed":false,"topics":["0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef","0x000000000000000000000000de7ec4e4895d7d148906a0dfaaf7f21ac5c5b80c","0x000000000000000000000000d6801a1dffcd0a410336ef88def4320d6df1883e"],"transactionHash":"0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352","transactionIndex":"0x1"},{"address":"0xd6801a1dffcd0a410336ef88def4320d6df1883e","blockHash":"0x3d62f862d25cf7015a485868b07825484fd7a51f77a9e7863fe45ec8a61db01b","blockNumber":"0x60f03b","data":"0x000000000000000000000000de7ec4e4895d7d148906a0dfaaf7f21ac5c5b80c00000000000000000000000000000000000000000000000000470de4df82000000000000000000000000000000000000000000000000000000000000052f2dd9","logIndex":"0x2","removed":false,"topics":["0xe5b754fb1abb7f01b499791d0b820ae3b6af3424ac1c59768edb53f4ec31a929"],"transactionHash":"0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352","transactionIndex":"0x1"}],"logsBloom":"0x00000080000000000000000000000000000000000000000000000000000000000000040000100000800000000000000000000000000000000000000000000000000000000000000000000808000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000010000000000000000080000000000000000000000000000000000000800000000000000001000000000000000000000000000000000000000000000000000000002000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000020200000000004","status":"0x1","to":"0xd6801a1dffcd0a410336ef88def4320d6df1883e","transactionHash":"0x627914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352","transactionIndex":"0x1","type":"0x0"}}]""")
+            },
             infuraUrl = infuraUrl,
             json = Json
         )
@@ -175,7 +149,7 @@ class Web3Test {
     fun `smart contract params`() {
         val json = Json
         val web3 = Web3(
-            httpClient = httpClient,
+            httpClient = createMockClient { respondBadRequest() },
             infuraUrl = infuraUrl,
             json = json
         )
@@ -212,7 +186,7 @@ class Web3Test {
 
         assertEquals(
             expected = "0000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74",
-            actual = hex.toLowerCase()
+            actual = hex.lowercase()
         )
 
         val address = param.decode(result)
@@ -231,7 +205,7 @@ class Web3Test {
 
         assertEquals(
             expected = "1234567891011adfdfdeadfea123d34cd342dcd234234ffeedd342432ddff555",
-            actual = hex.toLowerCase()
+            actual = hex.lowercase()
         )
 
         val output = param.decode(result)
@@ -245,7 +219,7 @@ class Web3Test {
     fun `smart contract encoding`() {
         val json = Json
         val web3 = Web3(
-            httpClient = httpClient,
+            httpClient = createMockClient { respondBadRequest() },
             infuraUrl = infuraUrl,
             json = json
         )
@@ -269,7 +243,6 @@ class Web3Test {
                 )
             )
         }
-        println(result)
         assertEquals(
             expected = "0x34ba830c0000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000020000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000",
             actual = result.data
@@ -280,7 +253,15 @@ class Web3Test {
     fun `read balance`() {
         val json = Json
         val web3 = Web3(
-            httpClient = httpClient,
+            httpClient = createMockClient { request ->
+                val body = request.body
+                assertTrue(body is TextContent)
+                assertEquals(
+                    expected = """[{"jsonrpc":"2.0","id":0,"method":"eth_getBalance","params":["0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C","latest"]}]""",
+                    actual = body.text
+                )
+                respond(content = """[{"jsonrpc":"2.0","id":0,"result":"0xd94ec060b14773c7"}]""")
+            },
             infuraUrl = infuraUrl,
             json = json
         )
@@ -289,14 +270,25 @@ class Web3Test {
             web3.getEthBalance(WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C"))
         }
 
-        println("balance $result")
+        assertEquals(
+            expected = "15658664475937436615".bi,
+            actual = result
+        )
     }
 
     @Test
     fun `get nonce`() {
         val json = Json
         val web3 = Web3(
-            httpClient = httpClient,
+            httpClient = createMockClient { request ->
+                val body = request.body
+                assertTrue(body is TextContent)
+                assertEquals(
+                    expected = """[{"jsonrpc":"2.0","id":0,"method":"eth_getTransactionCount","params":["0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C","pending"]}]""",
+                    actual = body.text
+                )
+                respond(content = """[{"jsonrpc":"2.0","id":0,"result":"0x1275"}]""")
+            },
             infuraUrl = infuraUrl,
             json = json
         )
@@ -305,6 +297,44 @@ class Web3Test {
             web3.getEthTransactionCount(WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C"))
         }
 
-        println("nonce $result")
+        assertEquals(
+            expected = 4725.bi,
+            actual = result
+        )
+    }
+
+    @Test
+    fun `batch test`() {
+        val json = Json
+        val web3 = Web3(
+            httpClient = createMockClient { request ->
+                val body = request.body
+                assertTrue(body is TextContent)
+                assertEquals(
+                    expected = """[{"jsonrpc":"2.0","id":0,"method":"eth_getTransactionCount","params":["0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C","pending"]},{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C","latest"]}]""",
+                    actual = body.text
+                )
+                respond(content = """[{"jsonrpc":"2.0","id":0,"result":"0x1275"},{"jsonrpc":"2.0","id":1,"result":"0xd94ec060b14773c7"}]""")
+            },
+            infuraUrl = infuraUrl,
+            json = json
+        )
+        val wallet = WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C")
+
+        val (nonce, balance) = runTest {
+            web3.executeBatch(
+                Web3Requests.getEthTransactionCount(wallet),
+                Web3Requests.getEthBalance(wallet),
+            )
+        }
+
+        assertEquals(
+            expected = 4725.bi,
+            actual = nonce
+        )
+        assertEquals(
+            expected = "15658664475937436615".bi,
+            actual = balance
+        )
     }
 }

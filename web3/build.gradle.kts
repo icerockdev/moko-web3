@@ -35,6 +35,7 @@ dependencies {
     
     commonTestImplementation(libs.kotlinTestCommon)
     commonTestImplementation(libs.kotlinTestAnnotations)
+    commonTestImplementation(libs.ktorClientMock)
 
     androidMainImplementation(libs.ktorClientOkHttp)
     androidTestImplementation(libs.ktorClientOkHttp)
