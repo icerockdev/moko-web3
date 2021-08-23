@@ -342,7 +342,15 @@ class Web3Test {
     fun `gas price test`() {
         val json = Json
         val web3 = Web3(
-            httpClient = httpClient,
+            httpClient = createMockClient { request ->
+                val body = request.body
+                assertTrue(body is TextContent)
+                assertEquals(
+                    expected = """[{"jsonrpc":"2.0","id":0,"method":"eth_gasPrice","params":[]}]""",
+                    actual = body.text
+                )
+                respond(content = """[{"jsonrpc":"2.0","id":0,"result":"0x3b9aca08"}]""")
+            },
             infuraUrl = infuraUrl,
             json = json
         )
