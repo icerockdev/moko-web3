@@ -11,6 +11,7 @@ import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
 import dev.icerock.moko.web3.Web3
 import dev.icerock.moko.web3.Web3RpcRequest
+import dev.icerock.moko.web3.annotation.Web3Stub
 import dev.icerock.moko.web3.crypto.KeccakParameter
 import dev.icerock.moko.web3.crypto.digestKeccak
 import dev.icerock.moko.web3.crypto.toHex
@@ -56,6 +57,7 @@ class SmartContract(
         dataSerializer: KSerializer<T>
     ): T = web3.executeBatch(readRequest(method, params, from, dataSerializer)).first()
 
+    @Web3Stub
     fun writeRequest(
         method: String,
         params: List<Any>,
@@ -68,6 +70,7 @@ class SmartContract(
         return Web3Requests.send(signedTransaction)
     }
 
+    @Web3Stub
     suspend fun write(
         method: String,
         params: List<Any>,
@@ -77,6 +80,7 @@ class SmartContract(
         writeRequest(method, params, from, value)
     ).first().let(::TransactionHash)
 
+    @Web3Stub
     fun signTransaction(data: JsonElement): String {
         TODO()
     }
