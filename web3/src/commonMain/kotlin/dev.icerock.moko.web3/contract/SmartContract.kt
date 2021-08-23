@@ -10,6 +10,7 @@ import dev.icerock.moko.web3.ContractAddress
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
 import dev.icerock.moko.web3.Web3
+import dev.icerock.moko.web3.annotation.Web3Stub
 import dev.icerock.moko.web3.crypto.KeccakParameter
 import dev.icerock.moko.web3.crypto.digestKeccak
 import dev.icerock.moko.web3.crypto.toHex
@@ -49,6 +50,7 @@ class SmartContract(
         return web3.call(data, dataSerializer)
     }
 
+    @Web3Stub
     suspend fun write(
         method: String,
         params: List<Any>,
@@ -61,6 +63,7 @@ class SmartContract(
         return web3.send(signedTransaction)
     }
 
+    @Web3Stub
     fun signTransaction(data: JsonElement): String {
         TODO()
     }
