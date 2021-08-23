@@ -12,6 +12,7 @@ import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.serializer.BigIntSerializer
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -66,5 +67,11 @@ object Web3Requests {
         params = listOf(transactionHash.value),
         paramsSerializer = String.serializer(),
         resultSerializer = Transaction.serializer()
+    )
+    fun getGasPrice() = Web3RpcRequest(
+        method = "eth_gasPrice",
+        params = listOf(),
+        paramsSerializer = ListSerializer(Unit.serializer()),
+        resultSerializer = BigIntSerializer
     )
 }
