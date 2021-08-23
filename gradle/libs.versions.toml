@@ -9,7 +9,7 @@ kbignumVersion = "2.2.0"
 klockVersion = "2.2.2"
 ktorClientVersion = "1.6.1"
 mokoTestVersion = "0.4.0"
-mokoWeb3Version = "0.5.0"
+mokoWeb3Version = "0.6.0"
 multidexVersion = "2.0.1"
 
 [libraries]
@@ -31,6 +31,7 @@ kotlinSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-js
 ktorClient = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientVersion" }
 ktorClientLogigng = { module = "io.ktor:ktor-client-logging", version.ref = "ktorClientVersion" }
 ktorClientOkHttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientVersion" }
+ktorClientMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorClientVersion" }
 ktorWebsockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktorClientVersion" }
 ktorClientIos = { module = "io.ktor:ktor-client-ios", version.ref = "ktorClientVersion" }
 klock = { module = "com.soywiz.korlibs.klock:klock", version.ref = "klockVersion" }

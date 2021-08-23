@@ -4,9 +4,9 @@
 
 package dev.icerock.moko.web3
 
-import dev.icerock.moko.web3.entity.InfuraRequest
+import dev.icerock.moko.web3.entity.RpcRequest
 
 data class UnknownWeb3RpcException(
-    val request: InfuraRequest<*>,
+    val request: RpcRequest<*>,
     val response: String
 ) : Exception("request $request return invalid response $response")

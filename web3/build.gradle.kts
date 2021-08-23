@@ -1,6 +1,7 @@
 /*
  * Copyright 2021 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
  */
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("multiplatform-library-convention")
@@ -15,6 +16,14 @@ android {
     }
 }
 
+kotlin {
+    sourceSets {
+        all {
+            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
+        }
+    }
+}
+
 dependencies {
     commonMainImplementation(libs.coroutines)
     commonMainImplementation(libs.kbignum)
@@ -26,6 +35,7 @@ dependencies {
     
     commonTestImplementation(libs.kotlinTestCommon)
     commonTestImplementation(libs.kotlinTestAnnotations)
+    commonTestImplementation(libs.ktorClientMock)
 
     androidMainImplementation(libs.ktorClientOkHttp)
     androidTestImplementation(libs.ktorClientOkHttp)
@@ -65,6 +75,7 @@ val newTestTask = tasks.create("iosX64TestWithNetwork") {
         }
     }
 }
+
 with(tasks.getByName("iosX64Test")) {
     dependsOn(newTestTask)
     onlyIf { false }
