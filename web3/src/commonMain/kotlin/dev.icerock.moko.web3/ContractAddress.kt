@@ -4,4 +4,7 @@
 
 package dev.icerock.moko.web3
 
-inline class ContractAddress(override val value: String) : EthereumAddress
+import kotlin.jvm.JvmInline
+
+@JvmInline
+value class ContractAddress(override val value: String) : EthereumAddress
