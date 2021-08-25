@@ -4,4 +4,9 @@
 
 package dev.icerock.moko.web3
 
-inline class TransactionHash(val value: String)
+import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmInline
+
+@JvmInline
+@Serializable
+value class TransactionHash(val value: String)
