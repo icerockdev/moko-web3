@@ -63,9 +63,7 @@ class Web3(
 
     suspend fun send(
         signedTransaction: String
-    ) = TransactionHash(
-        value = executeBatch(Web3Requests.send(signedTransaction)).first()
-    )
+    ): TransactionHash = executeBatch(Web3Requests.send(signedTransaction)).first()
 
     suspend fun getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
 

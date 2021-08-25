@@ -63,7 +63,7 @@ class SmartContract(
         params: List<Any>,
         from: WalletAddress? = null,
         value: BigInt?
-    ): Web3RpcRequest<String, String> {
+    ): Web3RpcRequest<String, TransactionHash> {
         val transactionCall = encodeTransaction(method, params, from, value)
         val data = json.encodeToJsonElement(ContractRPC.serializer(), transactionCall)
         val signedTransaction: String = signTransaction(data)
@@ -76,9 +76,7 @@ class SmartContract(
         params: List<Any>,
         from: WalletAddress? = null,
         value: BigInt?
-    ): TransactionHash = web3.executeBatch(
-        writeRequest(method, params, from, value)
-    ).first().let(::TransactionHash)
+    ): TransactionHash = web3.executeBatch(writeRequest(method, params, from, value)).first()
 
     @Web3Stub
     fun signTransaction(data: JsonElement): String {
