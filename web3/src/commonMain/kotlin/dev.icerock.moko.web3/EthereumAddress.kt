@@ -12,6 +12,13 @@ interface EthereumAddress {
     val value: String
 
     val bigInt: BigInt get() = value.removePrefix("0x").bi(16)
+
     val checksummed: ContractAddress get() = ContractAddress(value = value.toChecksummedAddress())
     val isChecksummed: Boolean get() = this == checksummed
+
+    val isValid get(): Boolean {
+        return value.uppercase() == value
+                || value.lowercase() == value
+                || isChecksummed
+    }
 }
