@@ -22,7 +22,7 @@ object Web3Requests {
         method = "eth_sendRawTransaction",
         params = listOf(signedTransaction),
         paramsSerializer = String.serializer(),
-        resultSerializer = String.serializer()
+        resultSerializer = TransactionHash.serializer()
     )
     fun <T> call(
         transactionCall: JsonElement,
