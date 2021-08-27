@@ -20,11 +20,16 @@ fun ByteArray.toHex(): String {
     return result.toString()
 }
 
-fun String.hexStringToByteArray(): ByteArray {
-    require(length % 2 == 0) { "Hex string length should be odd" }
+fun String.hexStringAddLeadingZeroIfNeed() = takeIf { length % 2 == 0 } ?: "0$this"
 
-    return removePrefix(prefix = "0x")
-        .lowercase()
+/**
+ * @param unsafe if true then it automatically adds leading zero if the length is even
+ */
+fun String.hexStringToByteArray(unsafe: Boolean = false): ByteArray {
+    val string = if(unsafe) hexStringAddLeadingZeroIfNeed() else this
+    require(string.length % 2 == 0) { "Hex string length should be odd" }
+
+    return string.removePrefix(prefix = "0x")
         .map { it }  // Converting to a list of chars to use destructors in map
         .chunked(size = 2)
         .map { (firstPart, secondPart) -> convertOctetToByte(firstPart, secondPart) }
@@ -32,13 +37,8 @@ fun String.hexStringToByteArray(): ByteArray {
 }
 
 private fun convertOctetToByte(firstPart: Char, secondPart: Char): Byte {
-    val firstHex = HEX_CHARS.indexOf(firstPart)
-    val secondHex = HEX_CHARS.indexOf(secondPart)
-
-    val message = "Hex string cannot contain non-hex symbols"
-    require(firstHex != -1) { message }
-    require(secondHex != -1) { message }
-
+    val firstHex = firstPart.digitToInt(radix = 16)
+    val secondHex = secondPart.digitToInt(radix = 16)
     val octet = (firstHex shl 4) or secondHex
     return octet.toByte()
 }
