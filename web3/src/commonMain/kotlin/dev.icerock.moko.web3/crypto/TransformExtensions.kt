@@ -4,8 +4,7 @@
 
 package dev.icerock.moko.web3.crypto
 
-@OptIn(ExperimentalStdlibApi::class)
-private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
+private val HEX_CHARS = "0123456789abcdef".toCharArray()
 
 fun ByteArray.toHex(): String {
     val result = StringBuilder()
@@ -22,19 +21,24 @@ fun ByteArray.toHex(): String {
 }
 
 fun String.hexStringToByteArray(): ByteArray {
-    val processedString = if (length.rem(2) != 0) "0$this"
-    else this
+    require(length % 2 == 0) { "Hex string length should be odd" }
 
-    val result = ByteArray(processedString.length / 2)
-    val uppercased = processedString.toUpperCase()
+    return removePrefix(prefix = "0x")
+        .lowercase()
+        .map { it }  // Converting to a list of chars to use destructors in map
+        .chunked(size = 2)
+        .map { (firstPart, secondPart) -> convertOctetToByte(firstPart, secondPart) }
+        .toByteArray()
+}
 
-    for (i in 0 until processedString.length step 2) {
-        val firstIndex = HEX_CHARS.indexOf(uppercased[i]);
-        val secondIndex = HEX_CHARS.indexOf(uppercased[i + 1]);
+private fun convertOctetToByte(firstPart: Char, secondPart: Char): Byte {
+    val firstHex = HEX_CHARS.indexOf(firstPart)
+    val secondHex = HEX_CHARS.indexOf(secondPart)
 
-        val octet = firstIndex.shl(4).or(secondIndex)
-        result[i.shr(1)] = octet.toByte()
-    }
+    val message = "Hex string cannot contain non-hex symbols"
+    require(firstHex != -1) { message }
+    require(secondHex != -1) { message }
 
-    return result
+    val octet = (firstHex shl 4) or secondHex
+    return octet.toByte()
 }
