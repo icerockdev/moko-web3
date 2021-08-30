@@ -4,8 +4,7 @@
 
 package dev.icerock.moko.web3.crypto
 
-@OptIn(ExperimentalStdlibApi::class)
-private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
+private val HEX_CHARS = "0123456789abcdef".toCharArray()
 
 fun ByteArray.toHex(): String {
     val result = StringBuilder()
@@ -21,20 +20,25 @@ fun ByteArray.toHex(): String {
     return result.toString()
 }
 
-fun String.hexStringToByteArray(): ByteArray {
-    val processedString = if (length.rem(2) != 0) "0$this"
-    else this
+fun String.hexStringAddLeadingZeroIfNeed() = takeIf { length % 2 == 0 } ?: "0$this"
 
-    val result = ByteArray(processedString.length / 2)
-    val uppercased = processedString.toUpperCase()
+/**
+ * @param unsafe if true then it automatically adds leading zero if the length is even
+ */
+fun String.hexStringToByteArray(unsafe: Boolean = false): ByteArray {
+    val string = if(unsafe) hexStringAddLeadingZeroIfNeed() else this
+    require(string.length % 2 == 0) { "Hex string length should be odd" }
 
-    for (i in 0 until processedString.length step 2) {
-        val firstIndex = HEX_CHARS.indexOf(uppercased[i]);
-        val secondIndex = HEX_CHARS.indexOf(uppercased[i + 1]);
+    return string.removePrefix(prefix = "0x")
+        .map { it }  // Converting to a list of chars to use destructors in map
+        .chunked(size = 2)
+        .map { (firstPart, secondPart) -> convertOctetToByte(firstPart, secondPart) }
+        .toByteArray()
+}
 
-        val octet = firstIndex.shl(4).or(secondIndex)
-        result[i.shr(1)] = octet.toByte()
-    }
-
-    return result
+private fun convertOctetToByte(firstPart: Char, secondPart: Char): Byte {
+    val firstHex = firstPart.digitToInt(radix = 16)
+    val secondHex = secondPart.digitToInt(radix = 16)
+    val octet = (firstHex shl 4) or secondHex
+    return octet.toByte()
 }
