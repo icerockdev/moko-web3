@@ -4,11 +4,12 @@
 
 package dev.icerock.moko.web3
 
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationStrategy
 
 data class Web3RpcRequest<T, R>(
     val method: String,
     val params: List<T>,
-    val paramsSerializer: KSerializer<T>,
-    val resultSerializer: KSerializer<R>
+    val paramsSerializer: SerializationStrategy<T>,
+    val resultSerializer: DeserializationStrategy<R>
 )

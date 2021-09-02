@@ -10,26 +10,20 @@ import dev.icerock.moko.web3.entity.RpcResponse
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.requests.Web3Requests
-import dev.icerock.moko.web3.serializer.BigIntSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.url
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readText
 import io.ktor.http.ContentType
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 class Web3(
@@ -77,11 +71,24 @@ class Web3(
                     params = web3Request.params
                 )
             }
+
         val encodedToStringBody = rawRequests
             .mapIndexed { index, request ->
+                val encodedParams = request.params.map { param ->
+                    json.encodeToJsonElement(
+                        serializer = requests[index].paramsSerializer,
+                        value = param
+                    )
+                }
                 json.encodeToJsonElement(
-                    serializer = RpcRequest.serializer(requests[index].paramsSerializer),
-                    value = request
+                    serializer = RpcRequest.serializer(JsonElement.serializer()),
+                    // cannot use copy since generics mismatch
+                    value = RpcRequest(
+                        method = request.method,
+                        id = request.id,
+                        jsonrpc = request.jsonrpc,
+                        params = encodedParams
+                    )
                 )
             }.let { list -> json.encodeToString(list) }
 
@@ -99,11 +106,10 @@ class Web3(
                 val id = response.getValue(key = "id").jsonPrimitive.int
                 return@first id == index
             }
-            val serializer = RpcResponse.serializer(request.resultSerializer)
 
             return@mapIndexed processResponse(
                 request = rawRequests[index],
-                serializer = serializer,
+                deserializer = request.resultSerializer,
                 content = response.toString()
             )
         }
@@ -111,16 +117,22 @@ class Web3(
 
     private fun <T> processResponse(
         request: RpcRequest<*>,
-        serializer: KSerializer<RpcResponse<T>>,
+        deserializer: DeserializationStrategy<T>,
         content: String
     ): T {
-        val infuraResponse = json.decodeFromString(serializer, content)
+        val response = json.decodeFromString(RpcResponse.serializer(JsonElement.serializer()), content)
+        val typedResponse = RpcResponse(
+            jsonrpc = response.jsonrpc,
+            id = response.id,
+            result = response.result?.let { json.decodeFromJsonElement(deserializer, it) },
+            error = response.error
+        )
 
         when {
-            infuraResponse.result != null -> return infuraResponse.result
-            infuraResponse.error != null -> throw Web3RpcException(
-                code = infuraResponse.error.code,
-                message = infuraResponse.error.message,
+            typedResponse.result != null -> return typedResponse.result
+            typedResponse.error != null -> throw Web3RpcException(
+                code = typedResponse.error.code,
+                message = typedResponse.error.message,
                 request = request
             )
             else -> throw UnknownWeb3RpcException(
