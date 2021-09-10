@@ -23,6 +23,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -90,12 +91,12 @@ class Web3(
                         params = encodedParams
                     )
                 )
-            }.let { list -> json.encodeToString(list) }
+            }.let { list -> json.encodeToJsonElement(list) }
 
         val responses = httpClient
             .post<String> {
                 url(infuraUrl)
-                body = encodedToStringBody
+                body = encodedToStringBody.outgoingContent
             }.let { raw ->
                 json.decodeFromString<List<JsonObject>>(raw)
             }

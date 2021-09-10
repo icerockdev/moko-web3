@@ -175,6 +175,9 @@ class SmartContract(
         val sha3 = signature.digestKeccak(KeccakParameter.KECCAK_256)
         return sha3.copyOf(4)
     }
+    
+    suspend fun <T, R> executeBatch(vararg requests: Web3RpcRequest<T, R>): List<R> =
+        web3.executeBatch(*requests)
 
     companion object {
         internal const val PART_SIZE = 32
@@ -190,13 +193,4 @@ private sealed interface EncodedPart {
     val encoded: ByteArray
     class DynamicPart(override val encoded: ByteArray) : EncodedPart
     class StaticPart(override val encoded: ByteArray) : EncodedPart
-}
-
-/**
- * First iteration while decoding is an iteration over params head, at that moment,
- * static types are fully decoded, while for dynamic types only offset decoded
- */
-private sealed interface DecodedPart {
-    class PartiallyDynamic(val offset: Int) : DecodedPart
-    class Fully(val value: Any) : DecodedPart
 }
