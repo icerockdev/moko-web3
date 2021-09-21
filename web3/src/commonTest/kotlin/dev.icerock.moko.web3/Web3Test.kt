@@ -2,6 +2,8 @@
  * Copyright 2020 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
  */
 
+@file:Suppress("EXPERIMENTAL_API_USAGE")
+
 package dev.icerock.moko.web3
 
 import com.soywiz.kbignum.BigInt
@@ -13,7 +15,7 @@ import dev.icerock.moko.web3.contract.createErc20TokenAbi
 import dev.icerock.moko.web3.crypto.toHex
 import dev.icerock.moko.web3.entity.RpcRequest
 import dev.icerock.moko.web3.entity.TransactionReceipt
-import dev.icerock.moko.web3.requests.Web3Requests
+import dev.icerock.moko.web3.requests.*
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
@@ -33,7 +35,7 @@ class Web3Test {
         handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData
     ): Web3 = Web3(
         httpClient = createMockClient(handler),
-        infuraUrl = infuraUrl,
+        endpointUrl = infuraUrl,
         json = Json
     )
 
@@ -321,21 +323,15 @@ class Web3Test {
 
     @Test
     fun `gas price test`() {
-        val json = Json
-        val web3 = Web3(
-            httpClient = createMockClient { request ->
-                val body = request.body
-                assertTrue(body is TextContent)
-                assertEquals(
-                    expected = """[{"jsonrpc":"2.0","id":0,"method":"eth_gasPrice","params":[]}]""",
-                    actual = body.text
-                )
-                respond(content = """[{"jsonrpc":"2.0","id":0,"result":"0x3b9aca08"}]""")
-            },
-            infuraUrl = infuraUrl,
-            json = json
-        )
-
+        val web3 = createTestWeb3 { request ->
+            val body = request.body
+            assertTrue(body is TextContent)
+            assertEquals(
+                expected = """[{"jsonrpc":"2.0","id":0,"method":"eth_gasPrice","params":[]}]""",
+                actual = body.text
+            )
+            respond(content = """[{"jsonrpc":"2.0","id":0,"result":"0x3b9aca08"}]""")
+        }
         runTest {
             assertEquals(
                 expected = 1000000008.bi,
