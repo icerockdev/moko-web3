@@ -4,20 +4,13 @@
 
 package dev.icerock.moko.web3
 
-import com.soywiz.kbignum.BigInt
+import dev.icerock.moko.web3.annotation.DelicateWeb3Api
 import dev.icerock.moko.web3.entity.RpcRequest
 import dev.icerock.moko.web3.entity.RpcResponse
-import dev.icerock.moko.web3.entity.Transaction
-import dev.icerock.moko.web3.entity.TransactionReceipt
-import dev.icerock.moko.web3.requests.Web3Requests
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.url
-import io.ktor.http.ContentType
-import io.ktor.http.content.OutgoingContent
-import io.ktor.http.content.TextContent
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -26,42 +19,17 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 
-class Web3(
+/**
+ * Default http implementation for web3 requests.
+ * @delicate Don't use the default constructor since it is for test purposes only
+ */
+class Web3 @DelicateWeb3Api constructor(
     private val httpClient: HttpClient,
     private val json: Json,
-    private val infuraUrl: String
-) {
-    suspend fun getTransaction(
-        transactionHash: TransactionHash
-    ): Transaction = executeBatch(Web3Requests.getTransaction(transactionHash)).first()
+    private val endpointUrl: String
+) : Web3Executor {
 
-    suspend fun getTransactionReceipt(
-        transactionHash: TransactionHash
-    ): TransactionReceipt = executeBatch(Web3Requests.getTransactionReceipt(transactionHash)).first()
-
-    suspend fun getEthBalance(
-        walletAddress: WalletAddress,
-        blockState: BlockState = BlockState.Latest
-    ): BigInt = executeBatch(Web3Requests.getEthBalance(walletAddress, blockState)).first()
-
-    suspend fun getEthTransactionCount(
-        walletAddress: WalletAddress,
-        blockState: BlockState = BlockState.Pending
-    ): BigInt = executeBatch(Web3Requests.getEthTransactionCount(walletAddress, blockState)).first()
-
-    suspend fun <T> call(
-        transactionCall: JsonElement,
-        responseDataSerializer: KSerializer<T>,
-        blockState: BlockState = BlockState.Latest,
-    ): T = executeBatch(Web3Requests.call(transactionCall, responseDataSerializer, blockState)).first()
-
-    suspend fun send(
-        signedTransaction: String
-    ): TransactionHash = executeBatch(Web3Requests.send(signedTransaction)).first()
-
-    suspend fun getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
-
-    suspend fun <T, R> executeBatch(vararg requests: Web3RpcRequest<T, R>): List<R> {
+    override suspend fun <T, R> executeBatch(vararg requests: Web3RpcRequest<T, R>): List<R> {
         // Used later for logging if exception
         val rawRequests = requests
             .mapIndexed { index, web3Request ->
@@ -94,7 +62,7 @@ class Web3(
 
         val responses = httpClient
             .post<String> {
-                url(infuraUrl)
+                url(endpointUrl)
                 body = encodedToStringBody
             }.let { raw ->
                 json.decodeFromString<List<JsonObject>>(raw)
@@ -141,13 +109,4 @@ class Web3(
             )
         }
     }
-
-
-    private val JsonElement.outgoingContent: OutgoingContent
-        get() {
-            return TextContent(
-                text = this.toString(),
-                contentType = ContentType.Application.Json
-            )
-        }
 }
