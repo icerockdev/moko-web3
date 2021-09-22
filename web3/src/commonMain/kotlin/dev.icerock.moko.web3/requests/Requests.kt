@@ -23,15 +23,15 @@ suspend fun Web3Executor.getTransactionReceipt(
     transactionHash: TransactionHash
 ): TransactionReceipt = executeBatch(Web3Requests.getTransactionReceipt(transactionHash)).first()
 
-suspend fun Web3Executor.getEthBalance(
+suspend fun Web3Executor.getNativeBalance(
     walletAddress: WalletAddress,
     blockState: BlockState = BlockState.Latest
-): BigInt = executeBatch(Web3Requests.getEthBalance(walletAddress, blockState)).first()
+): BigInt = executeBatch(Web3Requests.getNativeBalance(walletAddress, blockState)).first()
 
-suspend fun Web3Executor.getEthTransactionCount(
+suspend fun Web3Executor.getNativeTransactionCount(
     walletAddress: WalletAddress,
     blockState: BlockState = BlockState.Pending
-): BigInt = executeBatch(Web3Requests.getEthTransactionCount(walletAddress, blockState)).first()
+): BigInt = executeBatch(Web3Requests.getNativeTransactionCount(walletAddress, blockState)).first()
 
 suspend fun <T> Web3Executor.call(
     transactionCall: JsonElement,
