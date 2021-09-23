@@ -11,7 +11,9 @@ import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.serializer.BigIntSerializer
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonElement
@@ -26,15 +28,15 @@ object Web3Requests {
     )
     fun <T> call(
         transactionCall: JsonElement,
-        responseDataSerializer: KSerializer<T>,
+        responseDataDeserializer: DeserializationStrategy<T>,
         blockState: BlockState = BlockState.Latest
     ) = Web3RpcRequest(
         method = "eth_call",
         params = listOf(transactionCall, JsonPrimitive(blockState.toString())),
         paramsSerializer = JsonElement.serializer(),
-        resultSerializer = responseDataSerializer
+        resultSerializer = responseDataDeserializer
     )
-    fun getEthTransactionCount(
+    fun getNativeTransactionCount(
         walletAddress: WalletAddress,
         blockState: BlockState = BlockState.Pending
     ) = Web3RpcRequest(
@@ -51,7 +53,7 @@ object Web3Requests {
         paramsSerializer = String.serializer(),
         resultSerializer = TransactionReceipt.serializer()
     )
-    fun getEthBalance(
+    fun getNativeBalance(
         walletAddress: WalletAddress,
         blockState: BlockState = BlockState.Latest
     ) = Web3RpcRequest(

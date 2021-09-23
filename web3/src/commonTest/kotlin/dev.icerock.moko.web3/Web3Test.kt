@@ -13,10 +13,8 @@ import dev.icerock.moko.web3.contract.SmartContract
 import dev.icerock.moko.web3.contract.UInt256Param
 import dev.icerock.moko.web3.contract.createErc20TokenAbi
 import dev.icerock.moko.web3.crypto.toHex
-import dev.icerock.moko.web3.entity.RpcRequest
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.requests.*
-import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondBadRequest
@@ -153,9 +151,9 @@ class Web3Test {
     @Test
     fun `smart contract params`() {
         val json = Json
-        val web3 = createTestWeb3 { respondBadRequest() }
+        val executor = createTestWeb3 { respondBadRequest() }
         val smartContract = SmartContract(
-            web3 = web3,
+            executor = executor,
             contractAddress = ContractAddress("0x6b175474e89094c44da98b954eedeac495271d0f"),
             abiJson = createErc20TokenAbi(json)
         )
@@ -219,9 +217,9 @@ class Web3Test {
     @Test
     fun `smart contract encoding`() {
         val json = Json
-        val web3 = createTestWeb3 { respondBadRequest() }
+        val executor = createTestWeb3 { respondBadRequest() }
         val smartContract = SmartContract(
-            web3 = web3,
+            executor = executor,
             contractAddress = ContractAddress(value = "NO-NEED"),
             abiJson = createTestAbi(json)
         )
@@ -259,7 +257,7 @@ class Web3Test {
         }
 
         val result = runTest {
-            web3.getEthBalance(WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C"))
+            web3.getNativeBalance(WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C"))
         }
 
         assertEquals(
@@ -281,7 +279,7 @@ class Web3Test {
         }
 
         val result = runTest {
-            web3.getEthTransactionCount(WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C"))
+            web3.getNativeTransactionCount(WalletAddress("0xdE7eC4E4895D7d148906a0DFaAF7f21ac5C5B80C"))
         }
 
         assertEquals(
@@ -306,8 +304,8 @@ class Web3Test {
 
         val (nonce, balance) = runTest {
             web3.executeBatch(
-                Web3Requests.getEthTransactionCount(wallet),
-                Web3Requests.getEthBalance(wallet),
+                Web3Requests.getNativeTransactionCount(wallet),
+                Web3Requests.getNativeBalance(wallet),
             )
         }
 
