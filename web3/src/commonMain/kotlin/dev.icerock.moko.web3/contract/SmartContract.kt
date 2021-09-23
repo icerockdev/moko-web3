@@ -9,7 +9,7 @@ import com.soywiz.kbignum.bi
 import dev.icerock.moko.web3.ContractAddress
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
-import dev.icerock.moko.web3.Web3
+import dev.icerock.moko.web3.Web3Executor
 import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.annotation.Web3Stub
 import dev.icerock.moko.web3.crypto.KeccakParameter
@@ -18,7 +18,9 @@ import dev.icerock.moko.web3.crypto.toHex
 import dev.icerock.moko.web3.requests.Web3Requests
 import dev.icerock.moko.web3.requests.executeBatch
 import io.ktor.utils.io.core.toByteArray
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -28,7 +30,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 class SmartContract(
-    private val web3: Web3,
+    private val executor: Web3Executor,
     val contractAddress: ContractAddress,
     abiJson: JsonArray
 ) {
@@ -44,11 +46,11 @@ class SmartContract(
         method: String,
         params: List<Any>,
         from: WalletAddress? = null,
-        dataSerializer: KSerializer<T>
+        dataDeserializer: DeserializationStrategy<T>
     ): Web3RpcRequest<JsonElement, T> {
         val transactionCall = encodeTransaction(method, params, from)
         val data = json.encodeToJsonElement(ContractRPC.serializer(), transactionCall)
-        return Web3Requests.call(data, dataSerializer)
+        return Web3Requests.call(data, dataDeserializer)
     }
 
     suspend fun <T> read(
@@ -56,7 +58,7 @@ class SmartContract(
         params: List<Any>,
         from: WalletAddress? = null,
         dataSerializer: KSerializer<T>
-    ): T = web3.executeBatch(readRequest(method, params, from, dataSerializer)).first()
+    ): T = executor.executeBatch(readRequest(method, params, from, dataSerializer)).first()
 
     @Web3Stub
     fun writeRequest(
@@ -77,7 +79,7 @@ class SmartContract(
         params: List<Any>,
         from: WalletAddress? = null,
         value: BigInt?
-    ): TransactionHash = web3.executeBatch(writeRequest(method, params, from, value)).first()
+    ): TransactionHash = executor.executeBatch(writeRequest(method, params, from, value)).first()
 
     @Web3Stub
     fun signTransaction(data: JsonElement): String {
