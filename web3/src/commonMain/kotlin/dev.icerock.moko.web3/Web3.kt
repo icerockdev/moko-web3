@@ -29,6 +29,13 @@ class Web3 @DelicateWeb3Api constructor(
     private val endpointUrl: String
 ) : Web3Executor {
 
+    @OptIn(DelicateWeb3Api::class)
+    constructor(endpointUrl: String) : this(
+        httpClient = HttpClient(),
+        json = Json,
+        endpointUrl = endpointUrl
+    )
+
     override suspend fun <T, R> executeBatch(vararg requests: Web3RpcRequest<T, R>): List<R> {
         // Used later for logging if exception
         val rawRequests = requests
