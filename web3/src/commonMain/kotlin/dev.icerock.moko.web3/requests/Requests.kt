@@ -5,15 +5,15 @@
 package dev.icerock.moko.web3.requests
 
 import com.soywiz.kbignum.BigInt
-import dev.icerock.moko.web3.BlockState
-import dev.icerock.moko.web3.TransactionHash
-import dev.icerock.moko.web3.WalletAddress
-import dev.icerock.moko.web3.Web3Executor
+import dev.icerock.moko.web3.*
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonElement
 
+
+suspend fun <T> Web3Executor.executeBatch(vararg requests: Web3RpcRequest<*, T>): List<T> =
+    executeBatch(requests.toList())
 
 suspend fun Web3Executor.getTransaction(
     transactionHash: TransactionHash
