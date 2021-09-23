@@ -16,6 +16,7 @@ import dev.icerock.moko.web3.crypto.KeccakParameter
 import dev.icerock.moko.web3.crypto.digestKeccak
 import dev.icerock.moko.web3.crypto.toHex
 import dev.icerock.moko.web3.requests.Web3Requests
+import dev.icerock.moko.web3.requests.executeBatch
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json

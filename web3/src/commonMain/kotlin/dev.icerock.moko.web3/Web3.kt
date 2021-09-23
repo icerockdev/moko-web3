@@ -13,6 +13,7 @@ import io.ktor.client.request.url
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -29,7 +30,14 @@ class Web3 @DelicateWeb3Api constructor(
     private val endpointUrl: String
 ) : Web3Executor {
 
-    override suspend fun <T, R> executeBatch(vararg requests: Web3RpcRequest<T, R>): List<R> {
+    @OptIn(DelicateWeb3Api::class)
+    constructor(endpointUrl: String) : this(
+        httpClient = HttpClient(),
+        json = Json,
+        endpointUrl = endpointUrl
+    )
+
+    override suspend fun <R> executeBatch(requests: List<Web3RpcRequest<*, R>>): List<R> {
         // Used later for logging if exception
         val rawRequests = requests
             .mapIndexed { index, web3Request ->
@@ -43,9 +51,10 @@ class Web3 @DelicateWeb3Api constructor(
         val encodedToStringBody = rawRequests
             .mapIndexed { index, request ->
                 val encodedParams = request.params.map { param ->
+                    val (value, serializer) = unsafeCast(param, requests[index].paramsSerializer)
                     json.encodeToJsonElement(
-                        serializer = requests[index].paramsSerializer,
-                        value = param
+                        serializer = serializer,
+                        value = value
                     )
                 }
                 json.encodeToJsonElement(
@@ -109,4 +118,8 @@ class Web3 @DelicateWeb3Api constructor(
             )
         }
     }
+
+    @Suppress("UNCHECKED_CAST")
+    private inline fun <T> unsafeCast(value: T, serializer: SerializationStrategy<*>): Pair<T, SerializationStrategy<T>> =
+        value to (serializer as SerializationStrategy<T>)
 }
