@@ -13,5 +13,5 @@ interface Web3Executor {
      *
      * It is allowed to throw something else if it is not related to Web3 (internet exceptions, etc.)
      */
-    suspend fun <T, R> executeBatch(vararg requests: Web3RpcRequest<T, R>): List<R>
+    suspend fun <R> executeBatch(requests: List<Web3RpcRequest<*, R>>): List<R>
 }
