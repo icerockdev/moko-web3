@@ -8,6 +8,7 @@ import com.soywiz.kbignum.BigInt
 import dev.icerock.moko.web3.*
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
+import dev.icerock.moko.web3.requests.polling.shortPollingUntilNotNull
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonElement
 
@@ -21,7 +22,7 @@ suspend fun Web3Executor.getTransaction(
 
 suspend fun Web3Executor.getTransactionReceipt(
     transactionHash: TransactionHash
-): TransactionReceipt = executeBatch(Web3Requests.getTransactionReceipt(transactionHash)).first()
+): TransactionReceipt? = executeBatch(Web3Requests.getTransactionReceipt(transactionHash)).first()
 
 suspend fun Web3Executor.getNativeBalance(
     walletAddress: WalletAddress,
@@ -44,3 +45,14 @@ suspend fun Web3Executor.send(
 ): TransactionHash = executeBatch(Web3Requests.send(signedTransaction)).first()
 
 suspend fun Web3Executor.getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
+
+suspend fun Web3Executor.waitForTransactionReceipt(
+    hash: TransactionHash,
+    // one minute is the default timeout
+    timeOutMillis: Long? = null,
+    // interval is the default interval,
+    intervalMillis: Long = 1_000
+): TransactionReceipt =
+    shortPollingUntilNotNull(timeOutMillis, intervalMillis) {
+        getTransactionReceipt(hash)
+    }
