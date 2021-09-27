@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 data class RpcResponse<out T>(
     val jsonrpc: String,
     val id: Int,
-    val result: T? = null,
+    val result: T,
     val error: Error? = null
 ) {
     @Serializable

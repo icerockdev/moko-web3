@@ -15,6 +15,7 @@ import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -51,7 +52,7 @@ object Web3Requests {
         method = "eth_getTransactionReceipt",
         params = listOf(transactionHash.value),
         paramsSerializer = String.serializer(),
-        resultSerializer = TransactionReceipt.serializer()
+        resultSerializer = TransactionReceipt.serializer().nullable
     )
     fun getNativeBalance(
         walletAddress: WalletAddress,

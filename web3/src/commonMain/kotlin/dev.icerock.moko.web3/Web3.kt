@@ -14,11 +14,7 @@ import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 
 /**
  * Default http implementation for web3 requests.
@@ -92,30 +88,31 @@ class Web3 @DelicateWeb3Api constructor(
         }
     }
 
+    private fun <T> RpcResponse<JsonElement>.typed(
+        deserializer: DeserializationStrategy<T>
+    ) = RpcResponse(
+        jsonrpc = jsonrpc,
+        id = id,
+        result = json.decodeFromJsonElement(deserializer, result),
+        error = error
+    )
+
     private fun <T> processResponse(
         request: RpcRequest<*>,
         deserializer: DeserializationStrategy<T>,
         content: String
     ): T {
         val response = json.decodeFromString(RpcResponse.serializer(JsonElement.serializer()), content)
-        val typedResponse = RpcResponse(
-            jsonrpc = response.jsonrpc,
-            id = response.id,
-            result = response.result?.let { json.decodeFromJsonElement(deserializer, it) },
-            error = response.error
-        )
+
+        println(response)
 
         when {
-            typedResponse.result != null -> return typedResponse.result
-            typedResponse.error != null -> throw Web3RpcException(
-                code = typedResponse.error.code,
-                message = typedResponse.error.message,
+            response.error != null -> throw Web3RpcException(
+                code = response.error.code,
+                message = response.error.message,
                 request = request
             )
-            else -> throw UnknownWeb3RpcException(
-                request = request,
-                response = content
-            )
+            else -> return response.typed(deserializer).result
         }
     }
 
