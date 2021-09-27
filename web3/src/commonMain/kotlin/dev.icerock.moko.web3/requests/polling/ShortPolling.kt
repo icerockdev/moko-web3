@@ -1,9 +1,12 @@
+/*
+ * Copyright 2021 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
+ */
+
 package dev.icerock.moko.web3.requests.polling
 
 import kotlinx.coroutines.delay
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
-
 
 class TimeOutException(val timeout: Long) : Throwable(message = "Max timeout exceed ($timeout millis)")
 
@@ -16,7 +19,7 @@ suspend inline fun <T> shortPollingUntilSuccess(
     var timeSpent = 0L
     while(timeOutMillis == null || timeOutMillis > timeSpent) {
         val millis = measureTime {
-            block().also(::println)
+            block()
                 .takeIf(Result<*>::isSuccess)
                 ?.run { return getOrThrow() }
             delay(intervalMillis)
