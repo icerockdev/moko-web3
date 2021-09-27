@@ -4,16 +4,15 @@
 
 package dev.icerock.moko.web3.websockets
 
-import dev.icerock.moko.web3.LogsWeb3SocketEvent
 import dev.icerock.moko.web3.NewHeadsWeb3SocketEvent
 import dev.icerock.moko.web3.SyncingWeb3SocketEvent
 import dev.icerock.moko.web3.WalletAddress
+import dev.icerock.moko.web3.entity.LogEvent
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-
 
 /**
  * @param TEvent event returned by websocket
@@ -37,14 +36,16 @@ sealed interface SubscriptionParam<TEvent> {
     /**
      * Returns logs that are included in new imported blocks and match the given filter criteria.
      * In case of a chain reorganization previous sent logs that are on the old chain will be
-     * resend with the removed property set to true. Logs from transactions that ended
+     * resented with the removed property set to true. Logs from transactions that ended
      * up in the new chain are emitted.
-     * Therefore a subscription can emit logs for the same transaction multiple times.
+     * Therefore, a subscription can emit logs for the same transaction multiple times.
      */
-    open class Logs private constructor(
+    sealed class Logs constructor(
         addresses: List<WalletAddress>? = null,
-        topics: List<String>? = null
-    ) : SubscriptionParam<LogsWeb3SocketEvent> {
+        topics: List<String>? = null,
+        @Suppress("UNUSED_PARAMETER")
+        unused: Nothing? = null
+    ) : SubscriptionParam<LogEvent> {
         final override val name: String = "logs"
         @OptIn(ExperimentalStdlibApi::class)
         final override val params = buildMap<String, JsonElement> {
@@ -53,12 +54,22 @@ sealed interface SubscriptionParam<TEvent> {
             if(topics != null)
                 put("topics", Json.encodeToJsonElement(topics))
         }
-        final override val serializer: KSerializer<LogsWeb3SocketEvent> = LogsWeb3SocketEvent.serializer()
-
-        constructor(address: WalletAddress) : this(listOf(address), listOf())
+        final override val serializer: KSerializer<LogEvent> = LogEvent.serializer()
 
         companion object : Logs()
     }
+
+    private class LogsImpl(
+        addresses: List<WalletAddress>? = null,
+        topics: List<String>? = null
+    ) : Logs(addresses, topics)
+
+    fun Logs(
+        addresses: List<WalletAddress>? = null,
+        topics: List<String>? = null
+    ): Logs = LogsImpl(addresses, topics)
+
+    fun Logs(address: WalletAddress) = Logs(listOf(address), listOf())
 
     /**
      * Returns the hash for all transactions that are added to the pending state and are signed
