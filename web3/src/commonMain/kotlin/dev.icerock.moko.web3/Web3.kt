@@ -93,7 +93,7 @@ class Web3 @DelicateWeb3Api constructor(
     ) = RpcResponse(
         jsonrpc = jsonrpc,
         id = id,
-        result = json.decodeFromJsonElement(deserializer, result),
+        result = json.decodeFromJsonElement(deserializer, element = result ?: JsonNull),
         error = error
     )
 
@@ -104,15 +104,14 @@ class Web3 @DelicateWeb3Api constructor(
     ): T {
         val response = json.decodeFromString(RpcResponse.serializer(JsonElement.serializer()), content)
 
-        println(response)
-
+        @Suppress("UNCHECKED_CAST")
         when {
             response.error != null -> throw Web3RpcException(
                 code = response.error.code,
                 message = response.error.message,
                 request = request
             )
-            else -> return response.typed(deserializer).result
+            else -> return response.typed(deserializer).result as T
         }
     }
 
