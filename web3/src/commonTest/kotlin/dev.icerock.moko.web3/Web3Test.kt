@@ -341,17 +341,17 @@ class Web3Test {
         }
     }
 
-    @Test
-    fun `short polling test`() {
-        runTest {
-            println(Json.decodeFromString(
-                RpcResponse.serializer(JsonElement.serializer()),
-                """{"jsonrpc":"","id":0,"result":null}""").result as JsonNull)
-            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
-            web3.waitForTransactionReceipt(
-                TransactionHash("0x6f7914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352"),
-                timeOutMillis = 5_000
-            )
-        }
-    }
+//    @Test
+//    fun `short polling test`() {
+//        runTest {
+//            println(Json.decodeFromString(
+//                RpcResponse.serializer(JsonElement.serializer()),
+//                """{"jsonrpc":"","id":0,"result":null}""").result as JsonNull)
+//            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
+//            web3.waitForTransactionReceipt(
+//                TransactionHash("0x6f7914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352"),
+//                timeOutMillis = 5_000
+//            )
+//        }
+//    }
 }
