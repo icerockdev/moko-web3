@@ -8,8 +8,10 @@ import dev.icerock.moko.web3.annotation.DelicateWeb3Api
 import dev.icerock.moko.web3.entity.RpcRequest
 import dev.icerock.moko.web3.entity.RpcResponse
 import io.ktor.client.HttpClient
+import io.ktor.client.features.*
 import io.ktor.client.request.post
 import io.ktor.client.request.url
+import io.ktor.http.*
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -28,7 +30,11 @@ class Web3 @DelicateWeb3Api constructor(
 
     @OptIn(DelicateWeb3Api::class)
     constructor(endpointUrl: String) : this(
-        httpClient = HttpClient(),
+        httpClient = HttpClient {
+            install(DefaultRequest) {
+                contentType(ContentType.Application.Json)
+            }
+        },
         json = Json,
         endpointUrl = endpointUrl
     )
