@@ -15,7 +15,7 @@ interface HexString {
         fun createInstance(value: String): T
     }
 
-    companion object DefaultFactory : Factory<HexString> {
+    companion object : Factory<HexString> {
         override fun createInstance(value: String): HexString = HexString(value)
     }
 }

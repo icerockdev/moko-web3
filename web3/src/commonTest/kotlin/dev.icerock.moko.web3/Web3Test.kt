@@ -223,7 +223,7 @@ class Web3Test {
         val executor = createTestWeb3 { respondBadRequest() }
         val smartContract = SmartContract(
             executor = executor,
-            contractAddress = ContractAddress(value = "NO-NEED"),
+            contractAddress = ContractAddress(value = "0x0000000000000000000000000000000000000000"),
             abiJson = createTestAbi(json)
         )
 

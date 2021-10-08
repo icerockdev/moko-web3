@@ -19,4 +19,8 @@ fun ContractAddress.toChecksummedAddress(): ContractAddress =
     createChecksummedAddress(sourceAddress = this, factoryTypeclass = ContractAddress)
 
 @Suppress("ClassName")
-private class _ContractAddress(value: String) : ContractAddress, EthereumAddress by EthereumAddress(value)
+private class _ContractAddress(value: String) : EthereumAddress by EthereumAddress(value), ContractAddress {
+    override fun toString() = withoutPrefix 
+    override fun hashCode(): Int = withoutPrefix.hashCode()
+    override fun equals(other: Any?): Boolean = other is _ContractAddress && withoutPrefix == other.withoutPrefix
+}

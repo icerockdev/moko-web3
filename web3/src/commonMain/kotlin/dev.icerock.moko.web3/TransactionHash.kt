@@ -5,5 +5,11 @@
 package dev.icerock.moko.web3
 
 import dev.icerock.moko.web3.hex.Hex32String
+import kotlinx.serialization.Serializable
 
-class TransactionHash(value: String) : Hex32String by Hex32String(value)
+@Serializable
+class TransactionHash(private val value: String) : Hex32String by Hex32String(value) {
+    override fun toString() = withoutPrefix 
+    override fun hashCode(): Int = withoutPrefix.hashCode()
+    override fun equals(other: Any?): Boolean = other is TransactionHash && other.withoutPrefix == withoutPrefix
+}

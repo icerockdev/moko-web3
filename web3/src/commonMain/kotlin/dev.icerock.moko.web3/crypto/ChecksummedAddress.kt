@@ -18,6 +18,7 @@ fun <T : EthereumAddress> createChecksummedAddress(
     factoryTypeclass: HexString.Factory<T>
 ): T = with(sourceAddress) {
     val hashed = withoutPrefix
+        .lowercase()
         .keccakHash
         .asHexInts
 
@@ -25,7 +26,7 @@ fun <T : EthereumAddress> createChecksummedAddress(
         .mapIndexed { i, char -> char.takeIf { hashed[i] < 8 } ?: char.uppercase() }
         .joinToString(separator = "")
 
-    return factoryTypeclass.createInstance(value = "0x$result")
+    return factoryTypeclass.createInstance(result)
 }
 
 private val String.keccakHash get(): ByteArray = this

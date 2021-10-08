@@ -42,7 +42,7 @@ object Web3Requests {
         blockState: BlockState = BlockState.Pending
     ) = Web3RpcRequest(
         method = "eth_getTransactionCount",
-        params = listOf(walletAddress.value, blockState.toString()),
+        params = listOf(walletAddress.prefixed, blockState.toString()),
         paramsSerializer = String.serializer(),
         resultSerializer = BigIntSerializer
     )
@@ -50,7 +50,7 @@ object Web3Requests {
         transactionHash: TransactionHash
     ) = Web3RpcRequest(
         method = "eth_getTransactionReceipt",
-        params = listOf(transactionHash.value),
+        params = listOf(transactionHash.prefixed),
         paramsSerializer = String.serializer(),
         resultSerializer = TransactionReceipt.serializer().nullable
     )
@@ -59,7 +59,7 @@ object Web3Requests {
         blockState: BlockState = BlockState.Latest
     ) = Web3RpcRequest(
         method = "eth_getBalance",
-        params = listOf(walletAddress.value, blockState.toString()),
+        params = listOf(walletAddress.prefixed, blockState.toString()),
         paramsSerializer = String.serializer(),
         resultSerializer = BigIntSerializer
     )
@@ -67,7 +67,7 @@ object Web3Requests {
         transactionHash: TransactionHash
     ) = Web3RpcRequest(
         method = "eth_getTransactionByHash",
-        params = listOf(transactionHash.value),
+        params = listOf(transactionHash.prefixed),
         paramsSerializer = String.serializer(),
         resultSerializer = Transaction.serializer()
     )

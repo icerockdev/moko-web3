@@ -8,15 +8,18 @@ import com.soywiz.kbignum.BigInt
 import com.soywiz.kbignum.bi
 import kotlin.jvm.JvmInline
 
-@JvmInline
-internal value class HexStringValueClass(private val value: String): HexString {
+internal class HexStringValueClass(private val value: String): HexString {
     init {
-        require(withoutPrefix.matches(Regex("[0-9a-f]+")))
+        require(withoutPrefix.matches(Regex("[0-9a-fA-F]+")))
     }
 
     override val withoutPrefix: String get() = value.removePrefix(HEX_PREFIX)
     override val prefixed: String get() = "$HEX_PREFIX$withoutPrefix"
     override val bigInt: BigInt get() = value.bi(RADIX)
+
+    override fun toString() = withoutPrefix 
+    override fun hashCode(): Int = withoutPrefix.hashCode()
+    override fun equals(other: Any?): Boolean = other is HexStringValueClass && other.withoutPrefix == withoutPrefix
 
     companion object {
         const val HEX_PREFIX = "0x"
