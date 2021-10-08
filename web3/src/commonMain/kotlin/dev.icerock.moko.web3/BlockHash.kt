@@ -4,4 +4,6 @@
 
 package dev.icerock.moko.web3
 
-inline class BlockHash(val value: String)
+import dev.icerock.moko.web3.hex.Hex32String
+
+class BlockHash(val value: String) : Hex32String by Hex32String(value)

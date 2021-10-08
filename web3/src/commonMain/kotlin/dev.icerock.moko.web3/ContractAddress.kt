@@ -4,7 +4,19 @@
 
 package dev.icerock.moko.web3
 
-import kotlin.jvm.JvmInline
+import dev.icerock.moko.web3.crypto.createChecksummedAddress
+import dev.icerock.moko.web3.hex.HexString
 
-@JvmInline
-value class ContractAddress(override val value: String) : EthereumAddress
+interface ContractAddress : EthereumAddress {
+    companion object : HexString.Factory<ContractAddress> {
+        override fun createInstance(value: String): ContractAddress = ContractAddress(value)
+    }
+}
+
+fun ContractAddress(value: String): ContractAddress = _ContractAddress(value)
+
+fun ContractAddress.toChecksummedAddress(): ContractAddress =
+    createChecksummedAddress(sourceAddress = this, factoryTypeclass = ContractAddress)
+
+@Suppress("ClassName")
+private class _ContractAddress(value: String) : ContractAddress, EthereumAddress by EthereumAddress(value)

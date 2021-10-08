@@ -4,7 +4,8 @@
 
 package dev.icerock.moko.web3
 
-inline class Erc20TokenAddress(override val value: String) : EthereumAddress {
-    val contract: ContractAddress
-        get() = ContractAddress(value)
-}
+interface Erc20TokenAddress : ContractAddress
+
+private class _Erc20TokenAddress(value: String) : Erc20TokenAddress, ContractAddress by ContractAddress(value)
+
+fun Erc20TokenAddress(value: String): Erc20TokenAddress = _Erc20TokenAddress(value)

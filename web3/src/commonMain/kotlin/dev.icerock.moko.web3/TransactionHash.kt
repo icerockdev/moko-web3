@@ -4,9 +4,6 @@
 
 package dev.icerock.moko.web3
 
-import kotlinx.serialization.Serializable
-import kotlin.jvm.JvmInline
+import dev.icerock.moko.web3.hex.Hex32String
 
-@JvmInline
-@Serializable
-value class TransactionHash(val value: String)
+class TransactionHash(value: String) : Hex32String by Hex32String(value)

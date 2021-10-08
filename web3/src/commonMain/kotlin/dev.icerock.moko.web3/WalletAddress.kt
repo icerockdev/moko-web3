@@ -4,4 +4,4 @@
 
 package dev.icerock.moko.web3
 
-inline class WalletAddress(override val value: String) : EthereumAddress
+class WalletAddress(value: String) : EthereumAddress by EthereumAddress(value)
