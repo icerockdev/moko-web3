@@ -4,4 +4,10 @@
 
 package dev.icerock.moko.web3
 
-inline class WalletAddress(override val value: String) : EthereumAddress
+import dev.icerock.moko.web3.hex.Hex8String
+
+class WalletAddress(value: String) : EthereumAddress by EthereumAddress(value) {
+    override fun toString() = withoutPrefix 
+    override fun hashCode(): Int = withoutPrefix.hashCode()
+    override fun equals(other: Any?): Boolean = other is WalletAddress && withoutPrefix == other.withoutPrefix
+}

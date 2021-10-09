@@ -39,7 +39,7 @@ class Web3SocketTest {
         )
     }
 
-    @Test
+//    @Test
     fun `test web socket flow`() {
         runBlocking {
             web3Socket.subscribeWebSocketWithFilter(SubscriptionParam.Logs)

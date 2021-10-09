@@ -5,6 +5,8 @@
 package dev.icerock.moko.web3.crypto
 
 import dev.icerock.moko.web3.ContractAddress
+import dev.icerock.moko.web3.isValid
+import dev.icerock.moko.web3.toChecksummedAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -15,7 +17,7 @@ class ChecksummedAddressTest {
         val contractAddress = ContractAddress(value = "0xC9472182861faD74b6810cf58C792501F8837473").also(::println)
         assertEquals(
             expected = contractAddress,
-            actual = contractAddress.checksummed
+            actual = contractAddress.toChecksummedAddress().also(::println)
         )
     }
 
@@ -23,9 +25,9 @@ class ChecksummedAddressTest {
     fun `test is valid`() {
         val contractAddress = ContractAddress(value = "0xC9472182861faD74b6810cf58C792501F8837473")
         assertTrue(contractAddress.isValid)
-        val contractAddressNotChecksummedUppercase = ContractAddress(value = contractAddress.value.uppercase())
+        val contractAddressNotChecksummedUppercase = ContractAddress(value = contractAddress.withoutPrefix.uppercase())
         assertTrue(contractAddressNotChecksummedUppercase.isValid)
-        val contractAddressNotChecksummedLowercase = ContractAddress(value = contractAddress.value.lowercase())
+        val contractAddressNotChecksummedLowercase = ContractAddress(value = contractAddress.withoutPrefix.lowercase())
         assertTrue(contractAddressNotChecksummedLowercase.isValid)
     }
 }

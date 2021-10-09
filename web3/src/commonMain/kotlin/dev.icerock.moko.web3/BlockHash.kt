@@ -4,4 +4,10 @@
 
 package dev.icerock.moko.web3
 
-inline class BlockHash(val value: String)
+import dev.icerock.moko.web3.hex.Hex32String
+
+class BlockHash(val value: String) : Hex32String by Hex32String(value) {
+    override fun toString() = withoutPrefix 
+    override fun hashCode(): Int = withoutPrefix.hashCode()
+    override fun equals(other: Any?): Boolean = other is BlockHash && withoutPrefix == other.withoutPrefix
+}

@@ -94,8 +94,8 @@ class SmartContract(
     ): ContractRPC {
         val callData: String = createCallData(method, params)
         return ContractRPC(
-            to = contractAddress.value,
-            from = from?.value,
+            to = contractAddress.prefixed,
+            from = from?.prefixed,
             data = callData,
             value = value
         )
