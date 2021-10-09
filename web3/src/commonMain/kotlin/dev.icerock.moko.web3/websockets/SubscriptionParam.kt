@@ -50,7 +50,7 @@ sealed interface SubscriptionParam<TEvent> {
         @OptIn(ExperimentalStdlibApi::class)
         final override val params = buildMap<String, JsonElement> {
             if(addresses != null)
-                put("address", Json.encodeToJsonElement(addresses.map(WalletAddress::value)))
+                put("address", Json.encodeToJsonElement(addresses.map(WalletAddress::prefixed)))
             if(topics != null)
                 put("topics", Json.encodeToJsonElement(topics))
         }
