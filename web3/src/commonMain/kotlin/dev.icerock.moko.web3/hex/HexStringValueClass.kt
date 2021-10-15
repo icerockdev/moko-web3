@@ -15,7 +15,7 @@ internal class HexStringValueClass(private val value: String): HexString {
 
     override val withoutPrefix: String get() = value.removePrefix(HEX_PREFIX)
     override val prefixed: String get() = "$HEX_PREFIX$withoutPrefix"
-    override val bigInt: BigInt get() = value.bi(RADIX)
+    override val bigInt: BigInt get() = withoutPrefix.bi(RADIX)
 
     override fun toString() = withoutPrefix 
     override fun hashCode(): Int = withoutPrefix.hashCode()

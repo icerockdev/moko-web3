@@ -8,6 +8,7 @@ enum class StaticEncoders(
     val typeAnnotation: String,
     val encoder: StaticEncoder<*>
 ) {
+    UInt8(typeAnnotation = "uint8", encoder = UInt256Param),
     UInt256(typeAnnotation = "uint256", encoder = UInt256Param),
     Address(typeAnnotation = "address", encoder = AddressParam);
 
