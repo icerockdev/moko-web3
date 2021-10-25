@@ -4,9 +4,9 @@
 
 package dev.icerock.moko.web3.contract
 
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonArray
 
 class AbiMethodNotFoundException(
     val method: String,
-    val methodsAbi: Map<String, JsonObject>
+    val methodsAbi: JsonArray
 ) : Throwable("method $method not found in ABI $methodsAbi")

@@ -24,6 +24,20 @@ private const val testAbiRaw = """
                 {
                     "name": "list",
                     "type": "uint256[]"
+                },
+                {
+                    "components": [
+                        {
+                            "name": "address",
+                            "type": "address"
+                        },
+                        {
+                            "name": "list",
+                            "type": "address[]"
+                        }
+                    ],
+                    "name": "tuple",
+                    "type": "tuple"
                 }
             ],
             "name": "test",
@@ -39,5 +53,4 @@ private const val testAbiRaw = """
         }
     ]
 """
-
 fun createTestAbi(json: Json) = json.parseToJsonElement(testAbiRaw).jsonArray
