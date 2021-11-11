@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 object EthereumAddressSerializer : ParametrizedHexStringSerializer<EthereumAddress>(EthereumAddress)
 
 @Serializable(with = EthereumAddressSerializer::class)
-interface EthereumAddress : Hex32String {
+interface EthereumAddress : Hex20String {
     companion object : HexString.Factory<EthereumAddress> {
         override fun createInstance(value: String): EthereumAddress = EthereumAddress(value)
     }

@@ -18,6 +18,7 @@ import dev.icerock.moko.web3.entity.RpcResponse
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.requests.*
 import dev.icerock.moko.web3.requests.polling.newBlocksShortPolling
+import dev.icerock.moko.web3.requests.polling.newLogsShortPolling
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondBadRequest
@@ -139,7 +140,7 @@ class Web3Test {
                 actual = event.blockHash,
                 expected = BlockHash("0x3d62f862d25cf7015a485868b07825484fd7a51f77a9e7863fe45ec8a61db01b")
             )
-            assertEquals(actual = event.txHash, expected = txHash)
+            assertEquals(actual = event.transactionHash, expected = txHash)
             assertEquals(actual = event.blockNumber, expected = BigInt(6352955))
             assertEquals(actual = result.transactionIndex, expected = BigInt(1))
         }
@@ -378,6 +379,15 @@ class Web3Test {
 //            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
 //            web3.newBlocksShortPolling(pollingInterval = 5_000)
 //                .collect { println("Block ${it.hash} mined!") }
+//        }
+//    }
+
+//    @Test
+//    fun `new logs short polling test`() {
+//        runBlocking {
+//            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
+//            web3.newLogsShortPolling(pollingInterval = 5_000)
+//                .collect { println("Log $it caught!") }
 //        }
 //    }
 }

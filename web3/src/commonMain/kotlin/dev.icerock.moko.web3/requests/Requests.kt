@@ -6,8 +6,10 @@ package dev.icerock.moko.web3.requests
 
 import com.soywiz.kbignum.BigInt
 import dev.icerock.moko.web3.*
+import dev.icerock.moko.web3.entity.LogEvent
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
+import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.requests.polling.shortPollingUntilNotNull
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonElement
@@ -47,6 +49,17 @@ suspend fun Web3Executor.send(
 suspend fun Web3Executor.getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
 
 suspend fun Web3Executor.getBlockNumber(): BigInt = executeBatch(Web3Requests.getBlockNumber()).first()
+
+suspend fun Web3Executor.getBlockByNumber(blockState: BlockState): BlockInfo? =
+    executeBatch(Web3Requests.getBlockByNumber(blockState)).first()
+
+suspend fun Web3Executor.getLogs(
+    address: EthereumAddress? = null,
+    fromBlock: BlockState? = null,
+    toBlock: BlockState? = null,
+    topics: List<Hex32String>? = null,
+    blockHash: BlockHash? = null
+): List<LogEvent> = executeBatch(Web3Requests.getLogs(address, fromBlock, toBlock, topics, blockHash)).first()
 
 suspend fun Web3Executor.waitForTransactionReceipt(
     hash: TransactionHash,
