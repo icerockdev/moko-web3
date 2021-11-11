@@ -4,9 +4,12 @@
 
 package dev.icerock.moko.web3.requests
 
+import dev.icerock.moko.web3.BlockInfo
 import dev.icerock.moko.web3.BlockState
+import dev.icerock.moko.web3.BlockStateSerializer
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
+import dev.icerock.moko.web3.Web3
 import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
@@ -17,8 +20,10 @@ import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.encodeToJsonElement
 
 object Web3Requests {
     fun send(signedTransaction: String) = Web3RpcRequest(
@@ -76,5 +81,17 @@ object Web3Requests {
         params = listOf(),
         paramsSerializer = ListSerializer(Unit.serializer()),
         resultSerializer = BigIntSerializer
+    )
+    fun getBlockNumber() = Web3RpcRequest(
+        method = "eth_blockNumber",
+        params = listOf(),
+        paramsSerializer = ListSerializer(Unit.serializer()),
+        resultSerializer = BigIntSerializer
+    )
+    fun getBlockByNumber(block: BlockState) = Web3RpcRequest(
+        method = "eth_getBlockByNumber",
+        params = listOf(Json.encodeToJsonElement(BlockStateSerializer, block), JsonPrimitive(value = true)),
+        paramsSerializer = JsonElement.serializer(),
+        resultSerializer = BlockInfo.serializer().nullable
     )
 }

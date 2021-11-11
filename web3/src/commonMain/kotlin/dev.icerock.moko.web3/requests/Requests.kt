@@ -46,6 +46,8 @@ suspend fun Web3Executor.send(
 
 suspend fun Web3Executor.getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
 
+suspend fun Web3Executor.getBlockNumber(): BigInt = executeBatch(Web3Requests.getBlockNumber()).first()
+
 suspend fun Web3Executor.waitForTransactionReceipt(
     hash: TransactionHash,
     // one minute is the default timeout
