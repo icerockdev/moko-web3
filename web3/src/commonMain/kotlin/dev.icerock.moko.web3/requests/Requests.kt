@@ -59,7 +59,7 @@ suspend fun Web3Executor.getLogs(
     toBlock: BlockState? = null,
     topics: List<Hex32String>? = null,
     blockHash: BlockHash? = null
-): List<LogEvent> = executeBatch(Web3Requests.getLogs(address, fromBlock, toBlock, topics, blockHash)).first()
+): List<LogEvent>? = executeBatch(Web3Requests.getLogs(address, fromBlock, toBlock, topics, blockHash)).first()
 
 suspend fun Web3Executor.waitForTransactionReceipt(
     hash: TransactionHash,

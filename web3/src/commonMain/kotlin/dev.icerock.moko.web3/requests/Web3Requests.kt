@@ -117,6 +117,6 @@ object Web3Requests {
         method = "eth_getLogs",
         params = listOf(Json.encodeToJsonElement(GetLogsObject(address, fromBlock, toBlock, topics, blockHash))),
         paramsSerializer = JsonElement.serializer(),
-        resultSerializer = ListSerializer(LogEvent.serializer())
+        resultSerializer = ListSerializer(LogEvent.serializer()).nullable
     )
 }

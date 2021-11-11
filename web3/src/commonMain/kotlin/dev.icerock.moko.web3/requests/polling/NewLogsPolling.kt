@@ -6,6 +6,7 @@ package dev.icerock.moko.web3.requests.polling
 
 import dev.icerock.moko.web3.EthereumAddress
 import dev.icerock.moko.web3.Web3Executor
+import dev.icerock.moko.web3.Web3RpcException
 import dev.icerock.moko.web3.entity.LogEvent
 import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.requests.getLogs
@@ -18,6 +19,13 @@ fun Web3Executor.newLogsShortPolling(
     pollingInterval: Long = 5_000
 ): Flow<LogEvent> = newBlocksShortPolling(pollingInterval)
     .transform { block ->
-        getLogs(address, topics = topics, blockHash = block.hash)
-            .forEach { emit(it) }
+        while (true) {
+            // sometimes there is an exception because of unknown block,
+            // but the block was returned from web3 provider, so
+            // this is impossible that this block does not exist
+            try {
+                getLogs(address, topics = topics, blockHash = block.hash)?.forEach { emit(it) } ?: continue
+            } catch (_: Web3RpcException) { continue }
+            break
+        }
     }
