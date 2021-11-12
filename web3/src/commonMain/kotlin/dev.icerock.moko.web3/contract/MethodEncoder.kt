@@ -5,6 +5,7 @@
 package dev.icerock.moko.web3.contract
 
 import com.soywiz.kbignum.bi
+import dev.icerock.moko.web3.crypto.KeccakId
 import dev.icerock.moko.web3.crypto.KeccakParameter
 import dev.icerock.moko.web3.crypto.digestKeccak
 import dev.icerock.moko.web3.crypto.toHex
@@ -92,7 +93,7 @@ object MethodEncoder {
         inputParams: List<JsonObject>
     ): ByteArray {
         val signature = "$method(${generateParamsString(inputParams)})".toByteArray()
-        return signature.digestKeccak(KeccakParameter.KECCAK_256).sliceArray(0..3)
+        return KeccakId.get(signature)
     }
 
     private fun generateParamsString(inputParams: List<JsonObject>): String = buildString {
