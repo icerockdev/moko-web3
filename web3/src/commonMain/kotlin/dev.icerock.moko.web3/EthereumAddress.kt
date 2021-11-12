@@ -9,8 +9,13 @@ import dev.icerock.moko.web3.hex.Hex20String
 import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.hex.Hex8String
 import dev.icerock.moko.web3.hex.HexString
+import dev.icerock.moko.web3.hex.ParametrizedHexStringSerializer
+import kotlinx.serialization.Serializable
 
-interface EthereumAddress : Hex32String {
+object EthereumAddressSerializer : ParametrizedHexStringSerializer<EthereumAddress>(EthereumAddress)
+
+@Serializable(with = EthereumAddressSerializer::class)
+interface EthereumAddress : Hex20String {
     companion object : HexString.Factory<EthereumAddress> {
         override fun createInstance(value: String): EthereumAddress = EthereumAddress(value)
     }

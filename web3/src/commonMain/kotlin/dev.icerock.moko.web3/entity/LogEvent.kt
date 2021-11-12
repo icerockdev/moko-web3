@@ -9,6 +9,7 @@ package dev.icerock.moko.web3.entity
 import com.soywiz.kbignum.BigInt
 import dev.icerock.moko.web3.BlockHash
 import dev.icerock.moko.web3.ContractAddress
+import dev.icerock.moko.web3.EthereumAddress
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.serializer.BigIntSerializer
@@ -18,13 +19,10 @@ import kotlinx.serialization.Transient
 import kotlinx.serialization.UseSerializers
 
 @Serializable
-class LogEvent(
-    @SerialName("address")
-    private val _address: String,
-    @SerialName("blockHash")
-    private val _blockHash: String,
-    @SerialName("transactionHash")
-    private val _transactionHash: String,
+data class LogEvent(
+    val address: EthereumAddress,
+    val blockHash: BlockHash,
+    val transactionHash: TransactionHash,
     val blockNumber: BigInt,
     val data: String,
     val logIndex: BigInt,
@@ -32,15 +30,6 @@ class LogEvent(
     val topics: List<String>,
     val transactionIndex: BigInt
 ) {
-    @Transient
-    val address: ContractAddress = ContractAddress(_address)
-
-    @Transient
-    val blockHash: BlockHash = BlockHash(_blockHash)
-
-    @Transient
-    val txHash: TransactionHash = TransactionHash(_transactionHash)
-
     fun <T> deserializeData(dataDeserializer: DataDeserializer<T>): T =
         dataDeserializer.deserialize(data.chunked(size = 32 * 2).map(::Hex32String))
 
