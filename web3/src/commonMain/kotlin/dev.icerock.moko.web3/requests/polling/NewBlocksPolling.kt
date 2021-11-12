@@ -50,7 +50,7 @@ fun Web3Executor.newBlocksShortPolling(
             }
         }
     }.transform { (fromBlock, toBlock): Pair<BigInt, BigInt> ->
-        val blockNumbers = (fromBlock + 1)..toBlock
+        val blockNumbers = fromBlock..(toBlock - 1)
 
         val requests = blockNumbers
             .map(BlockState::Quantity)

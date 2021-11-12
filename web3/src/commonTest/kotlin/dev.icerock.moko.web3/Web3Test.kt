@@ -384,12 +384,12 @@ class Web3Test {
 //        }
 //    }
 
-//    @Test
-//    fun `new logs short polling test`() {
-//        runBlocking {
-//            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
-//            web3.newLogsShortPolling(pollingInterval = 5_000, topics = listOf(HexString("10").asHex32))
-//                .collect { println("Log $it caught!") }
-//        }
-//    }
+    @Test
+    fun `new logs short polling test`() {
+        runBlocking {
+            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
+            web3.newLogsShortPolling(pollingInterval = 5_000)
+                .collect { println("Log $it caught!") }
+        }
+    }
 }
