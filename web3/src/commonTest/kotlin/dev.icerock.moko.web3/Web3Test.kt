@@ -16,6 +16,8 @@ import dev.icerock.moko.web3.crypto.KeccakId
 import dev.icerock.moko.web3.crypto.toHex
 import dev.icerock.moko.web3.entity.RpcResponse
 import dev.icerock.moko.web3.entity.TransactionReceipt
+import dev.icerock.moko.web3.hex.HexString
+import dev.icerock.moko.web3.hex.asHex32
 import dev.icerock.moko.web3.requests.*
 import dev.icerock.moko.web3.requests.polling.newBlocksShortPolling
 import dev.icerock.moko.web3.requests.polling.newLogsShortPolling
@@ -386,7 +388,7 @@ class Web3Test {
 //    fun `new logs short polling test`() {
 //        runBlocking {
 //            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
-//            web3.newLogsShortPolling(pollingInterval = 5_000)
+//            web3.newLogsShortPolling(pollingInterval = 5_000, topics = listOf(HexString("10").asHex32))
 //                .collect { println("Log $it caught!") }
 //        }
 //    }

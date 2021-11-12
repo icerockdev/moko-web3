@@ -4,6 +4,7 @@
 
 package dev.icerock.moko.web3.requests.polling
 
+import com.soywiz.kbignum.BigInt
 import dev.icerock.moko.web3.EthereumAddress
 import dev.icerock.moko.web3.Web3Executor
 import dev.icerock.moko.web3.Web3RpcException
@@ -16,8 +17,9 @@ import kotlinx.coroutines.flow.transform
 fun Web3Executor.newLogsShortPolling(
     address: EthereumAddress? = null,
     topics: List<Hex32String> = listOf(),
+    fromBlock: BigInt? = null,
     pollingInterval: Long = 5_000
-): Flow<LogEvent> = newBlocksShortPolling(pollingInterval)
+): Flow<LogEvent> = newBlocksShortPolling(fromBlock, pollingInterval)
     .transform { block ->
         while (true) {
             // sometimes there is an exception because of unknown block,
