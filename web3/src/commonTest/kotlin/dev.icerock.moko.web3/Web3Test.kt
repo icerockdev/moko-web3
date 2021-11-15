@@ -376,7 +376,7 @@ class Web3Test {
         }
     }
 
-    @Test
+//    @Test
     fun `new logs short polling test`() {
         runBlocking {
             val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
