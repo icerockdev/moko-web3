@@ -29,8 +29,8 @@ open class HexString {
     constructor(string: String, strict: Boolean = true) {
         source = object : Source {
             override val withoutPrefix = string.removePrefix(HEX_PREFIX)
-            override val bigInt get() = string.bi(RADIX)
-            override val byteArray get() = string.hexStringToByteArray(unsafe = true)
+            override val bigInt get() = withoutPrefix.bi(RADIX)
+            override val byteArray get() = withoutPrefix.hexStringToByteArray(unsafe = true)
             override val size get() = withoutPrefix.length / 2
             override val value get() = withoutPrefix
             override fun fastEquals(otherValue: Any): Boolean? = when (otherValue) {
