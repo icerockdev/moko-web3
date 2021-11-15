@@ -25,6 +25,7 @@ open class ParametrizedHexStringSerializer<T : HexString>(private val typeclass:
 object HexStringSerializer : ParametrizedHexStringSerializer<HexString>(HexString)
 object Hex8StringSerializer : ParametrizedHexStringSerializer<Hex8String>(Hex8String)
 object Hex16StringSerializer : ParametrizedHexStringSerializer<Hex16String>(Hex16String)
+object Hex20StringSerializer : ParametrizedHexStringSerializer<Hex20String>(Hex20String)
 object Hex32StringSerializer : ParametrizedHexStringSerializer<Hex32String>(Hex32String)
 object Hex64StringSerializer : ParametrizedHexStringSerializer<Hex64String>(Hex64String)
 object Hex128StringSerializer : ParametrizedHexStringSerializer<Hex128String>(Hex128String)
