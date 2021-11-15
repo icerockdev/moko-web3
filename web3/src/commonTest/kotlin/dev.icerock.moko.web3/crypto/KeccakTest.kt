@@ -4,6 +4,8 @@
 
 package dev.icerock.moko.web3.crypto
 
+import dev.icerock.moko.web3.hex.internal.hexStringToByteArray
+import dev.icerock.moko.web3.hex.internal.toHex
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -36,13 +38,13 @@ class KeccakTest {
     @Test
     fun `test signature`() {
         assertEquals(
-            actual = "liquidationIncentiveMantissa()".digestKeccak(KeccakParameter.KECCAK_256).toHex().toLowerCase(),
+            actual = "liquidationIncentiveMantissa()".digestKeccak(KeccakParameter.KECCAK_256).toHex().lowercase(),
             expected = "4ada90af6b44d25a0b11928b22a71ad7cf4bea72796dfddcef4cc8e97183ccd5"
         )
 
         assertEquals(
             actual = "liquidationIncentiveMantissa()".digestKeccak(KeccakParameter.KECCAK_256)
-                .copyOfRange(0, 10).toHex().toLowerCase(),
+                .copyOfRange(0, 10).toHex().lowercase(),
             expected = "4ada90af6b44d25a0b11"
         )
     }

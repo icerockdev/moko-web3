@@ -12,9 +12,11 @@ import dev.icerock.moko.web3.contract.AddressParam
 import dev.icerock.moko.web3.contract.SmartContract
 import dev.icerock.moko.web3.contract.UInt256Param
 import dev.icerock.moko.web3.contract.createErc20TokenAbi
-import dev.icerock.moko.web3.crypto.toHex
+import dev.icerock.moko.web3.hex.internal.hexStringAddLeadingZeroIfNeed
+import dev.icerock.moko.web3.hex.internal.toHex
 import dev.icerock.moko.web3.entity.RpcResponse
 import dev.icerock.moko.web3.entity.TransactionReceipt
+import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.requests.*
 import dev.icerock.moko.web3.requests.polling.newBlocksShortPolling
 import dev.icerock.moko.web3.requests.polling.newLogsShortPolling
@@ -137,7 +139,7 @@ class Web3Test {
 
         assertEquals(
             actual = result.logs[0].topics,
-            expected = listOf("0x875352fb3fadeb8c0be7cbbe8ff761b308fa7033470cd0287f02f3436fd76cb9")
+            expected = listOf(Hex32String("0x875352fb3fadeb8c0be7cbbe8ff761b308fa7033470cd0287f02f3436fd76cb9"))
         )
 
         assertEquals(
@@ -146,12 +148,12 @@ class Web3Test {
                 "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
                 "0x000000000000000000000000de7ec4e4895d7d148906a0dfaaf7f21ac5c5b80c",
                 "0x000000000000000000000000d6801a1dffcd0a410336ef88def4320d6df1883e"
-            )
+            ).map(::Hex32String)
         )
 
         assertEquals(
             actual = result.logs[2].topics,
-            expected = listOf("0xe5b754fb1abb7f01b499791d0b820ae3b6af3424ac1c59768edb53f4ec31a929")
+            expected = listOf(Hex32String("0xe5b754fb1abb7f01b499791d0b820ae3b6af3424ac1c59768edb53f4ec31a929"))
         )
     }
 

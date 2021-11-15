@@ -12,6 +12,7 @@ import dev.icerock.moko.web3.ContractAddress
 import dev.icerock.moko.web3.EthereumAddress
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.hex.Hex32String
+import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.serializer.BigIntSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -24,14 +25,14 @@ data class LogEvent(
     val blockHash: BlockHash,
     val transactionHash: TransactionHash,
     val blockNumber: BigInt,
-    val data: String,
+    val data: HexString,
     val logIndex: BigInt,
     val removed: Boolean,
-    val topics: List<String>,
+    val topics: List<Hex32String>,
     val transactionIndex: BigInt
 ) {
     fun <T> deserializeData(dataDeserializer: DataDeserializer<T>): T =
-        dataDeserializer.deserialize(data.chunked(size = 32 * 2).map(::Hex32String))
+        dataDeserializer.deserialize(data.withoutPrefix.chunked(size = 32 * 2).map(::Hex32String))
 
     fun interface DataDeserializer<T> {
         fun deserialize(source: List<Hex32String>): T

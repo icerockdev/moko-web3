@@ -6,7 +6,6 @@ package dev.icerock.moko.web3.crypto
 
 import dev.icerock.moko.web3.EthereumAddress
 import dev.icerock.moko.web3.hex.HexString
-import dev.icerock.moko.web3.toChecksummedAddress
 
 /**
  * Explanation: https://coincodex.com/article/2078/ethereum-address-checksum-explained/

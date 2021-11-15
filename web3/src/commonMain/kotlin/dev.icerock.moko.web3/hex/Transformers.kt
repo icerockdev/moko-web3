@@ -4,13 +4,14 @@
 
 package dev.icerock.moko.web3.hex
 
-fun HexString.fillToHex8() = fillToSizedHex(Hex8String)
-fun HexString.fillToHex16() = fillToSizedHex(Hex16String)
-fun HexString.fillToHex20() = fillToSizedHex(Hex20String)
-fun HexString.fillToHex32() = fillToSizedHex(Hex32String)
-fun HexString.fillToHex64() = fillToSizedHex(Hex64String)
-fun HexString.fillToHex128() = fillToSizedHex(Hex128String)
-fun HexString.fillToHex256() = fillToSizedHex(Hex256String)
+import dev.icerock.moko.web3.hex.internal.hexBytesFillToSizedHex
+import dev.icerock.moko.web3.hex.internal.hexStringFillToSizedHex
+
+fun HexString.fillToStrict() = fillToSizedHex(
+    object : HexString.SizedFactory<HexString>, HexString.Factory<HexString> by HexString.Lenient {
+        override val size = this@fillToStrict.size
+    }
+)
 
 /**
  * This function adds leading zeros, so the original hex
@@ -18,19 +19,11 @@ fun HexString.fillToHex256() = fillToSizedHex(Hex256String)
  *
  * HexString("0x10").fillToHex8() - Hex8String("0x0000000000000010")
  */
-fun <T> HexString.fillToSizedHex(typeclass: HexString.SizedFactory<T>): T {
-    val currentSize = withoutPrefix.length / 2
-
-    if (currentSize > typeclass.size)
-        error("This hex string already has more bytes than the target one")
-    val isStrictlyValid = withoutPrefix.length % 2 == 0
-
-    return typeclass.createInstance(value = buildString {
-        repeat(times = typeclass.size - currentSize) {
-            append("00")
-        }
-        if (!isStrictlyValid)
-            append("0")
-        append(withoutPrefix)
-    })
+fun <T> HexString.fillToSizedHex(typeclass: HexString.SizedFactory<T>): T = when (sourceValue) {
+    is ByteArray -> byteArray
+        .hexBytesFillToSizedHex(typeclass.size)
+        .let(typeclass::createInstance)
+    else -> withoutPrefix
+        .hexStringFillToSizedHex(typeclass.size)
+        .let(typeclass::createInstance)
 }

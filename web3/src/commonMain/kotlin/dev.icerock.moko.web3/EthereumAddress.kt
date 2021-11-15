@@ -15,27 +15,17 @@ import kotlinx.serialization.Serializable
 object EthereumAddressSerializer : ParametrizedHexStringSerializer<EthereumAddress>(EthereumAddress)
 
 @Serializable(with = EthereumAddressSerializer::class)
-interface EthereumAddress : Hex20String {
-    companion object : HexString.Factory<EthereumAddress> {
+open class EthereumAddress(value: String) : Hex20String(value) {
+    companion object : SizedFactory<EthereumAddress> {
+        override val size: Int = 20
         override fun createInstance(value: String): EthereumAddress = EthereumAddress(value)
     }
+
+    open fun toChecksummedAddress(): EthereumAddress =
+        createChecksummedAddress(sourceAddress = this, factoryTypeclass = EthereumAddress)
+    val isChecksummed: Boolean get() = withoutPrefix == toChecksummedAddress().withoutPrefix
+    val isValid: Boolean get() =
+        withoutPrefix.uppercase() == withoutPrefix
+                || withoutPrefix.lowercase() == withoutPrefix
+                || isChecksummed
 }
-
-@Suppress("ClassName")
-private class _EthereumAddress(value: String) : Hex20String by Hex20String(value), EthereumAddress {
-    override fun toString() = withoutPrefix 
-    override fun hashCode(): Int = withoutPrefix.hashCode()
-    override fun equals(other: Any?): Boolean = other is EthereumAddress && withoutPrefix == other.withoutPrefix
-}
-
-fun EthereumAddress(value: String): EthereumAddress = _EthereumAddress(value)
-
-fun EthereumAddress.toChecksummedAddress(): EthereumAddress =
-    createChecksummedAddress(sourceAddress = this, factoryTypeclass = EthereumAddress)
-
-val EthereumAddress.isChecksummed: Boolean get() = withoutPrefix == toChecksummedAddress().withoutPrefix
-
-val EthereumAddress.isValid: Boolean get() =
-    withoutPrefix.uppercase() == withoutPrefix
-            || withoutPrefix.lowercase() == withoutPrefix
-            || isChecksummed
