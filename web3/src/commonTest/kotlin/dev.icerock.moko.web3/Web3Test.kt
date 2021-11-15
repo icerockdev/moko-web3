@@ -13,8 +13,10 @@ import dev.icerock.moko.web3.contract.SmartContract
 import dev.icerock.moko.web3.contract.UInt256Param
 import dev.icerock.moko.web3.contract.createErc20TokenAbi
 import dev.icerock.moko.web3.crypto.toHex
+import dev.icerock.moko.web3.entity.RpcResponse
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.requests.*
+import dev.icerock.moko.web3.requests.polling.newBlocksShortPolling
 import dev.icerock.moko.web3.requests.polling.newLogsShortPolling
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
@@ -25,6 +27,8 @@ import io.ktor.content.TextContent
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -346,29 +350,30 @@ class Web3Test {
     }
 
 //    @Test
-//    fun `short polling test`() {
-//        runTest {
-//            println(Json.decodeFromString(
-//                RpcResponse.serializer(JsonElement.serializer()),
-//                """{"jsonrpc":"","id":0,"result":null}""").result as JsonNull)
-//            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
-//            web3.waitForTransactionReceipt(
-//                TransactionHash("0x6f7914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352"),
-//                timeOutMillis = 5_000
-//            )
-//        }
-//    }
+    fun `short polling test`() {
+        runTest {
+            println(Json.decodeFromString(
+                RpcResponse.serializer(JsonElement.serializer()),
+                """{"jsonrpc":"","id":0,"result":null}""").result as JsonNull
+            )
+            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
+            web3.waitForTransactionReceipt(
+                TransactionHash("0x6f7914c8d005ab0dc7f44719dc658af72e534e083867a2a316d4b25555515352"),
+                timeOutMillis = 5_000
+            )
+        }
+    }
 
 //    @Test
-//    fun `new blocks short polling test`() {
-//        runBlocking {
-//            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
-//            web3.newBlocksShortPolling(pollingInterval = 5_000)
-//                .collect { println("Block ${it.hash} mined!") }
-//        }
-//    }
+    fun `new blocks short polling test`() {
+        runBlocking {
+            val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
+            web3.newBlocksShortPolling(pollingInterval = 5_000)
+                .collect { println("Block ${it.hash} mined!") }
+        }
+    }
 
-    @Test
+//    @Test
     fun `new logs short polling test`() {
         runBlocking {
             val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
