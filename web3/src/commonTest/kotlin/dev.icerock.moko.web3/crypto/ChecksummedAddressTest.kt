@@ -5,8 +5,6 @@
 package dev.icerock.moko.web3.crypto
 
 import dev.icerock.moko.web3.ContractAddress
-import dev.icerock.moko.web3.isValid
-import dev.icerock.moko.web3.toChecksummedAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
