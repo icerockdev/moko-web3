@@ -23,7 +23,7 @@ open class HexString {
     // but use getters instead
     private val source: Source
     // value that was used for hex creation
-    val sourceValue: Any get() = source.value
+    val sourceType: Any get() = source.type
 
     // create from string
     constructor(string: String, strict: Boolean = true) {
@@ -32,9 +32,9 @@ open class HexString {
             override val bigInt get() = withoutPrefix.bi(RADIX)
             override val byteArray get() = withoutPrefix.hexStringToByteArray(unsafe = true)
             override val size get() = withoutPrefix.length / 2
-            override val value get() = withoutPrefix
-            override fun fastEquals(otherValue: Any): Boolean? = when (otherValue) {
-                is String -> otherValue == value
+            override val type get() = SourceType.String
+            override fun fastEquals(other: HexString): Boolean? = when (other.sourceType) {
+                SourceType.String -> (withoutPrefix == other.withoutPrefix).also(::println)
                 else -> null
             }
         }
@@ -64,11 +64,11 @@ open class HexString {
                         else -> hexBytesFillToSizedHex(size)
                     }
                 }
-            override val size: Int get() = size ?: (withoutPrefix.length / 2)
-            override val value: Any = bigInt
+            override val size get() = size ?: (withoutPrefix.length / 2)
+            override val type = SourceType.BigInt
 
-            override fun fastEquals(otherValue: Any): Boolean? = when (otherValue) {
-                is BigInt -> otherValue == value
+            override fun fastEquals(other: HexString): Boolean? = when (other.sourceType) {
+                SourceType.BigInt -> bigInt == other.bigInt
                 else -> null
             }
         }
@@ -85,10 +85,10 @@ open class HexString {
             override val bigInt get() = withoutPrefix.bi(RADIX)
             override val byteArray = byteArray
             override val size get() = byteArray.size
-            override val value = byteArray
+            override val type = SourceType.ByteArray
 
-            override fun fastEquals(otherValue: Any): Boolean? = when (otherValue) {
-                is ByteArray -> otherValue.contentEquals(byteArray)
+            override fun fastEquals(other: HexString): Boolean? = when (other.sourceType) {
+                SourceType.ByteArray -> byteArray.contentEquals(other.byteArray)
                 else -> null
             }
         }
@@ -108,18 +108,23 @@ open class HexString {
     final override fun toString() = prefixed
     final override fun hashCode(): Int = withoutPrefix.hashCode()
     final override fun equals(other: Any?): Boolean = other is HexString &&
-            (other.source.fastEquals(other.source.value) ?: (size == other.size && withoutPrefix == other.withoutPrefix))
+            (source.fastEquals(other) ?: (size == other.size && withoutPrefix == other.withoutPrefix))
 
-    interface Source {
+    private interface Source {
         val withoutPrefix: String
         val bigInt: BigInt
         val byteArray: ByteArray
         val size: Int
 
-        val value: Any
+        val type: SourceType
         // check if equals may be fast-pathed or return null
-        fun fastEquals(otherValue: Any): Boolean?
+        fun fastEquals(other: HexString): Boolean?
     }
+
+    enum class SourceType {
+        String, ByteArray, BigInt
+    }
+
 
     interface Factory<T> {
         fun createInstance(value: String): T
