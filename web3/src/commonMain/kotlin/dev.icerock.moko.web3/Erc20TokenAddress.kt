@@ -6,8 +6,13 @@
 
 package dev.icerock.moko.web3
 
-interface Erc20TokenAddress : ContractAddress
+import dev.icerock.moko.web3.hex.ParametrizedHexStringSerializer
 
-private class _Erc20TokenAddress(value: String) : Erc20TokenAddress, ContractAddress by ContractAddress(value)
+object Erc20TokenAddressSerializer : ParametrizedHexStringSerializer<Erc20TokenAddress>(Erc20TokenAddress)
 
-fun Erc20TokenAddress(value: String): Erc20TokenAddress = _Erc20TokenAddress(value)
+class Erc20TokenAddress(value: String) : ContractAddress(value) {
+    companion object : SizedFactory<Erc20TokenAddress> {
+        override val size = 20
+        override fun createInstance(value: String) = Erc20TokenAddress(value)
+    }
+}

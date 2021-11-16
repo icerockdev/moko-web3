@@ -1,12 +1,12 @@
 /*
- * Copyright 2020 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2021 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package dev.icerock.moko.web3.crypto
+package dev.icerock.moko.web3.hex.internal
 
 private val HEX_CHARS = "0123456789abcdef".toCharArray()
 
-fun ByteArray.toHex(): String {
+internal fun ByteArray.toHex(): String {
     val result = StringBuilder()
 
     forEach {
@@ -20,12 +20,10 @@ fun ByteArray.toHex(): String {
     return result.toString()
 }
 
-fun String.hexStringAddLeadingZeroIfNeed() = takeIf { length % 2 == 0 } ?: "0$this"
-
 /**
  * @param unsafe if true then it automatically adds leading zero if the length is even
  */
-fun String.hexStringToByteArray(unsafe: Boolean = false): ByteArray {
+internal fun String.hexStringToByteArray(unsafe: Boolean = false): ByteArray {
     val string = if(unsafe) hexStringAddLeadingZeroIfNeed() else this
     require(string.length % 2 == 0) { "Hex string length should be odd" }
 

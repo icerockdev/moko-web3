@@ -6,9 +6,7 @@ package dev.icerock.moko.web3.contract
 
 import com.soywiz.kbignum.bi
 import dev.icerock.moko.web3.crypto.KeccakId
-import dev.icerock.moko.web3.crypto.KeccakParameter
-import dev.icerock.moko.web3.crypto.digestKeccak
-import dev.icerock.moko.web3.crypto.toHex
+import dev.icerock.moko.web3.hex.internal.toHex
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement

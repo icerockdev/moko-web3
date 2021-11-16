@@ -35,9 +35,12 @@ import kotlinx.coroutines.flow.transform
 private operator fun BigInt.rangeTo(other: BigInt): Iterable<BigInt> =
     generateSequence(seed = this) { block -> (block + 1).takeIf { it <= other} }.asIterable()
 
-fun Web3Executor.newBlocksShortPolling(pollingInterval: Long = 5_000): Flow<BlockInfo> =
+fun Web3Executor.newBlocksShortPolling(
+    fromBlock: BigInt? = null,
+    pollingInterval: Long = 5_000
+): Flow<BlockInfo> =
     flow {
-        var previousBlockNumber = getBlockNumber()
+        var previousBlockNumber = fromBlock ?: getBlockNumber()
         while (true) {
             delay(pollingInterval)
             val blockNumber = getBlockNumber()
@@ -47,7 +50,7 @@ fun Web3Executor.newBlocksShortPolling(pollingInterval: Long = 5_000): Flow<Bloc
             }
         }
     }.transform { (fromBlock, toBlock): Pair<BigInt, BigInt> ->
-        val blockNumbers = (fromBlock + 1)..toBlock
+        val blockNumbers = fromBlock..(toBlock - 1)
 
         val requests = blockNumbers
             .map(BlockState::Quantity)

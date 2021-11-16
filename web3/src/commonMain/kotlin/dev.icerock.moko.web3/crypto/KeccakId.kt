@@ -4,6 +4,7 @@
 
 package dev.icerock.moko.web3.crypto
 
+import dev.icerock.moko.web3.hex.internal.toHex
 import io.ktor.utils.io.core.toByteArray
 
 object KeccakId {

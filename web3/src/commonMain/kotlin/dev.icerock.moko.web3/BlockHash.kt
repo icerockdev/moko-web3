@@ -4,6 +4,7 @@
 
 package dev.icerock.moko.web3
 
+import com.soywiz.kbignum.BigInt
 import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.hex.ParametrizedHexStringSerializer
@@ -12,12 +13,8 @@ import kotlinx.serialization.Serializable
 object BlockHashSerializer : ParametrizedHexStringSerializer<BlockHash>(BlockHash)
 
 @Serializable(with = BlockHashSerializer::class)
-class BlockHash(val value: String) : Hex32String by Hex32String(value) {
-    override fun toString() = withoutPrefix 
-    override fun hashCode(): Int = withoutPrefix.hashCode()
-    override fun equals(other: Any?): Boolean = other is BlockHash && withoutPrefix == other.withoutPrefix
-
-    companion object : HexString.Factory<BlockHash> {
+class BlockHash(value: String) : Hex32String(value) {
+    companion object : Factory<BlockHash> {
         override fun createInstance(value: String): BlockHash = BlockHash(value)
     }
 }
