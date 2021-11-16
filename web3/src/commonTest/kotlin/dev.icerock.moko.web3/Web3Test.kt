@@ -17,6 +17,7 @@ import dev.icerock.moko.web3.hex.internal.toHex
 import dev.icerock.moko.web3.entity.RpcResponse
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.hex.Hex32String
+import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.requests.*
 import dev.icerock.moko.web3.requests.polling.newBlocksShortPolling
 import dev.icerock.moko.web3.requests.polling.newLogsShortPolling
