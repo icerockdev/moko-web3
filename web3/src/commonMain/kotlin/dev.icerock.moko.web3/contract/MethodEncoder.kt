@@ -82,6 +82,7 @@ object MethodEncoder {
             ListParam(StaticEncoders.forType(subtypeAnnotation).encoder)
         }
         typeAnnotation == "tuple" -> TupleParam(param)
+        typeAnnotation == "string" -> StringParam()
         else -> StaticEncoders.forType(typeAnnotation).encoder
     }
 
