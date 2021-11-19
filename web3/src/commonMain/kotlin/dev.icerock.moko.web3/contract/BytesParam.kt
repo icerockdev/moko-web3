@@ -3,7 +3,7 @@ package dev.icerock.moko.web3.contract
 import com.soywiz.kbignum.bi
 import dev.icerock.moko.web3.contract.MethodEncoder.PART_SIZE
 
-class BytesParam : DynamicEncoder<ByteArray> {
+object BytesParam : DynamicEncoder<ByteArray> {
     override fun encode(item: ByteArray): ByteArray {
         val sizeData = UInt256Param.encode(item.size.bi)
         return item
