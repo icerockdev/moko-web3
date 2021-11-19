@@ -50,6 +50,44 @@ private const val testAbiRaw = """
             "payable": false,
             "stateMutability": "nonpayable",
             "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "stringType",
+                    "type": "string"
+                }
+            ],
+            "name": "testStringEncoder",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "bytesType",
+                    "type": "bytes"
+                }
+            ],
+            "name": "testBytesEncoder",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
         }
     ]
 """
