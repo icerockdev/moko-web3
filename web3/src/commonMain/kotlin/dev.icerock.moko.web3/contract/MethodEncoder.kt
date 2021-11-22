@@ -83,6 +83,7 @@ object MethodEncoder {
         }
         typeAnnotation == "tuple" -> TupleParam(param)
         typeAnnotation == "string" -> StringParam
+        typeAnnotation == "bytes" -> BytesParam
         else -> StaticEncoders.forType(typeAnnotation).encoder
     }
 
