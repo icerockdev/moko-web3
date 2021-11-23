@@ -5,6 +5,7 @@
 package dev.icerock.moko.web3.contract
 
 import com.soywiz.kbignum.bi
+import dev.icerock.moko.web3.contract.internal.AbiEntityNotFoundException
 import dev.icerock.moko.web3.crypto.KeccakId
 import dev.icerock.moko.web3.hex.internal.toHex
 import io.ktor.utils.io.core.toByteArray
@@ -16,14 +17,14 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-object MethodEncoder {
+object ABIEncoder {
     @Suppress("UNCHECKED_CAST")
     private fun <T> Encoder<T>.encodeUnchecked(value: Any) = encode(value as T)
 
     fun createCallData(abi: JsonArray, method: String, params: List<Any>): String {
         val methodAbi: JsonObject = abi.map { it.jsonObject }
             .firstOrNull { it["name"]?.jsonPrimitive?.contentOrNull == method }
-            ?: throw AbiMethodNotFoundException(method, abi)
+            ?: throw AbiEntityNotFoundException(method, abi)
 
         val inputParams: List<JsonObject> =
             methodAbi.getValue(key = "inputs").jsonArray.map { it.jsonObject }
@@ -36,55 +37,49 @@ object MethodEncoder {
     }
 
     fun encodeParams(inputParams: List<JsonObject>, params: List<Any>): ByteArray {
+        // resolving encoders for every param
         val paramsEncoders = params.indices
-            .map { index ->
-                val param = inputParams[index]
-                val paramName = param.getValue(key = "type").jsonPrimitive.content
-                return@map param to paramName
-            }.map { (param, typeAnnotation) -> resolveEncoderForType(param, typeAnnotation) }
+            .map { index -> inputParams[index] }
+            .map { param -> resolveEncoderForType(param) }
 
-        val headPartiallyEncoded = paramsEncoders
+        // every param encoded to byte array
+        val encodedParams: List<EncodedPart> = paramsEncoders
             .zip(params)
             .map { (encoder, param) ->
                 when(encoder) {
+                    // static encoder simply encode the value
                     is StaticEncoder<*> -> EncodedPart.StaticPart(encoder.encodeUnchecked(param))
+                    // dynamic encoder encodes the value, but by the spec in head part here should be
+                    // offset, but not the value itself
                     is DynamicEncoder<*> -> EncodedPart.DynamicPart(encoder.encodeUnchecked(param))
                 }
             }
 
-        val dynamicPartsSizes = headPartiallyEncoded
-            .runningFold(initial = headPartiallyEncoded.size * PART_SIZE) { acc: Int, encodedPart: EncodedPart ->
+        // here calculating offset for every dynamic param
+        // so first offset is the size of head part (same as encodedParams size)
+        // and then adding one-by-one sizes of dynamic parts, so for example
+        // third element will have offset equal to head size + first dynamic part size + second dynamic part size
+        val dynamicPartsSizes = encodedParams
+            .runningFold(initial = encodedParams.size * PART_SIZE) { acc: Int, encodedPart: EncodedPart ->
                 when(encodedPart) {
                     is EncodedPart.DynamicPart -> acc + encodedPart.encoded.size
                     is EncodedPart.StaticPart -> acc
                 }
             }
 
-        val headEncoded = headPartiallyEncoded
+        val headEncoded = encodedParams
             .mapIndexed { index, encodedPart ->
-                if(encodedPart is EncodedPart.StaticPart)
-                    encodedPart.encoded
-                else
-                    UInt256Param.encode(dynamicPartsSizes[index].bi)
+                when (encodedPart) {
+                    is EncodedPart.StaticPart -> encodedPart.encoded
+                    is EncodedPart.DynamicPart -> UInt256Param.encode(dynamicPartsSizes[index].bi)
+                }
             }.fold(byteArrayOf()) { acc, part -> acc + part }
 
-        val dynamicPartEncoded = headPartiallyEncoded
+        val dynamicPartEncoded = encodedParams
             .filterIsInstance<EncodedPart.DynamicPart>()
             .fold(byteArrayOf()) { acc, part -> acc + part.encoded }
 
         return headEncoded + dynamicPartEncoded
-    }
-
-    private val listTypeRegex = Regex("(.*)\\[]")
-    private fun resolveEncoderForType(param: JsonObject, typeAnnotation: String) = when {
-        typeAnnotation.matches(listTypeRegex) -> {
-            val (subtypeAnnotation) = listTypeRegex.find(typeAnnotation)!!.destructured
-            ListParam(StaticEncoders.forType(subtypeAnnotation).encoder)
-        }
-        typeAnnotation == "tuple" -> TupleParam(param)
-        typeAnnotation == "string" -> StringParam
-        typeAnnotation == "bytes" -> BytesParam
-        else -> StaticEncoders.forType(typeAnnotation).encoder
     }
 
     @OptIn(ExperimentalStdlibApi::class)

@@ -11,7 +11,7 @@ import dev.icerock.moko.web3.WalletAddress
 import dev.icerock.moko.web3.Web3Executor
 import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.annotation.Web3Stub
-import dev.icerock.moko.web3.contract.MethodEncoder.createCallData
+import dev.icerock.moko.web3.contract.ABIEncoder.createCallData
 import dev.icerock.moko.web3.requests.Web3Requests
 import dev.icerock.moko.web3.requests.executeBatch
 import kotlinx.serialization.DeserializationStrategy

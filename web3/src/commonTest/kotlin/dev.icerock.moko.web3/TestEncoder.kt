@@ -4,10 +4,15 @@
 
 package dev.icerock.moko.web3
 
-import dev.icerock.moko.web3.contract.MethodEncoder
-import dev.icerock.moko.web3.hex.internal.toHex
+import com.soywiz.kbignum.bi
+import dev.icerock.moko.web3.contract.ABIDecoder
+import dev.icerock.moko.web3.contract.ABIEncoder
+import dev.icerock.moko.web3.hex.HexString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class TestEncoder {
@@ -16,27 +21,27 @@ class TestEncoder {
     // to check it, please visit https://abi.hashex.org and place there your abi
     @Test
     fun `test string encoder`() {
-        val abiJson = createTestAbi(Json)
-        val callData: String = MethodEncoder.createCallData(
-            abi = abiJson,
-            method = "testStringEncoder",
-            params = listOf("test")
-        )
-        val expected = "0xe4e8653c000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000047465737400000000000000000000000000000000000000000000000000000000"
-        assertEquals(expected, callData)
-    }
+        val testString = "test"
+        val testNotDynamicParam = 0.bi
+        val testBytes = byteArrayOf(0, 11, 22, 33, 44, 55, 66, 77)
 
-    // Checked, everything works fine
-    @Test
-    fun `test bytes encoder`() {
         val abiJson = createTestAbi(Json)
-        val array = byteArrayOf(0, 11, 22, 33, 44, 55, 66, 77)
-        val callData: String = MethodEncoder.createCallData(
+        val callData: String = ABIEncoder.createCallData(
             abi = abiJson,
-            method = "testBytesEncoder",
-            params = listOf(array)
+            method = "testDynamicEncoder",
+            params = listOf(testString, testNotDynamicParam, testBytes)
         )
-        val expected = "0xe1d2647500000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000008000b16212c37424d000000000000000000000000000000000000000000000000"
+
+        val expected = "0xa2d155530000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000474657374000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000b16212c37424d000000000000000000000000000000000000000000000000"
         assertEquals(expected, callData)
+
+        val decoded = ABIDecoder.decodeCallData(
+            HexString("0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000474657374000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000b16212c37424d000000000000000000000000000000000000000000000000").byteArray,
+            "string", "uint256", "bytes"
+        )
+
+        assertEquals(testString, decoded.first())
+        assertEquals(testNotDynamicParam, decoded[1])
+        assertContentEquals(testBytes, decoded[2] as ByteArray)
     }
 }

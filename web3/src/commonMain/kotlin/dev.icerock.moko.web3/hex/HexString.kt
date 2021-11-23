@@ -23,7 +23,7 @@ open class HexString {
     // but use getters instead
     private val source: Source
     // value that was used for hex creation
-    val sourceType: Any get() = source.type
+    val sourceType: SourceType get() = source.type
 
     // create from string
     constructor(string: String, strict: Boolean = true) {
