@@ -5,6 +5,7 @@
 package dev.icerock.moko.web3.contract
 
 import com.soywiz.kbignum.bi
+import dev.icerock.moko.web3.contract.ABIEncoder.PART_SIZE
 
 class ListParam<T>(private val subtypeEncoder: Encoder<T>) : DynamicEncoder<List<T>> {
     override fun encode(item: List<T>): ByteArray {
@@ -14,10 +15,9 @@ class ListParam<T>(private val subtypeEncoder: Encoder<T>) : DynamicEncoder<List
             .fold(sizeEncoded) { acc, part -> acc + part }
     }
     override fun decode(source: ByteArray): List<T> {
-//        val chunkedSource = source.toList().chunked(size = ParamsEncoder.PART_SIZE)
-//        // We drop first element since the first element is always list size
-//        return chunkedSource.drop(n = 1)
-//            .map { subtypeEncoder.decode(it.toByteArray()) }
-        TODO("moko-web3 does not support decoding dynamic params yet")
+        val chunkedSource = source.toList().chunked(size = PART_SIZE)
+        // We drop first element since the first element is always list size
+        return chunkedSource.drop(n = 1)
+            .map { subtypeEncoder.decode(it.toByteArray()) }
     }
 }

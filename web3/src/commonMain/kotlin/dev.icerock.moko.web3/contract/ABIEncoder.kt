@@ -19,9 +19,9 @@ import kotlinx.serialization.json.jsonPrimitive
 
 object ABIEncoder {
     @Suppress("UNCHECKED_CAST")
-    private fun <T> Encoder<T>.encodeUnchecked(value: Any) = encode(value as T)
+    private fun <T> Encoder<T>.encodeUnchecked(value: Any?) = encode(value as T)
 
-    fun createCallData(abi: JsonArray, method: String, params: List<Any>): String {
+    fun encodeCallDataForMethod(abi: JsonArray, method: String, params: List<Any>): String {
         val methodAbi: JsonObject = abi.map { it.jsonObject }
             .firstOrNull { it["name"]?.jsonPrimitive?.contentOrNull == method }
             ?: throw AbiEntityNotFoundException(method, abi)
@@ -31,12 +31,12 @@ object ABIEncoder {
 
         val methodSignature: ByteArray = generateMethodSignature(method, inputParams)
 
-        val data = methodSignature + encodeParams(inputParams, params)
+        val data = methodSignature + encodeCallData(inputParams, params)
 
         return "0x" + data.toHex().lowercase()
     }
 
-    fun encodeParams(inputParams: List<JsonObject>, params: List<Any>): ByteArray {
+    fun encodeCallData(inputParams: List<JsonObject>, params: List<Any?>): ByteArray {
         // resolving encoders for every param
         val paramsEncoders = params.indices
             .map { index -> inputParams[index] }

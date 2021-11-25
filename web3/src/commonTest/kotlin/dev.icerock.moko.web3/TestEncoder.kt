@@ -9,8 +9,6 @@ import dev.icerock.moko.web3.contract.ABIDecoder
 import dev.icerock.moko.web3.contract.ABIEncoder
 import dev.icerock.moko.web3.hex.HexString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -26,7 +24,7 @@ class TestEncoder {
         val testBytes = byteArrayOf(0, 11, 22, 33, 44, 55, 66, 77)
 
         val abiJson = createTestAbi(Json)
-        val callData: String = ABIEncoder.createCallData(
+        val callData: String = ABIEncoder.encodeCallDataForMethod(
             abi = abiJson,
             method = "testDynamicEncoder",
             params = listOf(testString, testNotDynamicParam, testBytes)
