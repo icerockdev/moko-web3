@@ -8,6 +8,8 @@ package dev.icerock.moko.web3
 
 import com.soywiz.kbignum.BigInt
 import com.soywiz.kbignum.bi
+import dev.icerock.moko.web3.contract.ABIDecoder
+import dev.icerock.moko.web3.contract.ABIEncoder
 import dev.icerock.moko.web3.contract.AddressParam
 import dev.icerock.moko.web3.contract.SmartContract
 import dev.icerock.moko.web3.contract.UInt256Param
@@ -32,6 +34,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -187,7 +191,7 @@ class Web3Test {
     }
 
     @Test
-    fun `address encoding`() {
+    fun `address encoder`() {
         val param = AddressParam
         val addr = "9a0A2498Ec7f105ef65586592a5B6d4Da3590D74".bi(16)
         val result = param.encode(addr)
@@ -206,7 +210,7 @@ class Web3Test {
     }
 
     @Test
-    fun `unit256 encoding`() {
+    fun `unit256 encoder`() {
         val param = UInt256Param
         val input = "1234567891011adfdfdeadfea123d34cd342dcd234234ffeedd342432ddff555".bi(16)
         val result = param.encode(input)

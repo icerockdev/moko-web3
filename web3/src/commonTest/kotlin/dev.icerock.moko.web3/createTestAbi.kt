@@ -9,86 +9,75 @@ import kotlinx.serialization.json.jsonArray
 
 // language=json
 private const val testAbiRaw = """
-    [
-        {
-            "constant": false,
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "address"
-                },
-                {
-                    "name": "int",
-                    "type": "uint256"
-                },
-                {
-                    "name": "list",
-                    "type": "uint256[]"
-                },
-                {
-                    "components": [
-                        {
-                            "name": "address",
-                            "type": "address"
-                        },
-                        {
-                            "name": "list",
-                            "type": "address[]"
-                        }
-                    ],
-                    "name": "tuple",
-                    "type": "tuple"
-                }
-            ],
-            "name": "test",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "constant": false,
-            "inputs": [
-                {
-                    "name": "stringType",
-                    "type": "string"
-                }
-            ],
-            "name": "testStringEncoder",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "constant": false,
-            "inputs": [
-                {
-                    "name": "bytesType",
-                    "type": "bytes"
-                }
-            ],
-            "name": "testBytesEncoder",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }
-    ]
+[
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "address",
+        "type": "address"
+      },
+      {
+        "name": "int",
+        "type": "uint256"
+      },
+      {
+        "name": "list",
+        "type": "uint256[]"
+      },
+      {
+        "components": [
+          {
+            "name": "address",
+            "type": "address"
+          },
+          {
+            "name": "list",
+            "type": "address[]"
+          }
+        ],
+        "name": "tuple",
+        "type": "tuple"
+      }
+    ],
+    "name": "test",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "stringType",
+        "type": "string"
+      },
+      {
+        "name": "not dynamic type",
+        "type": "uint256"
+      },
+      {
+        "name": "bytesType",
+        "type": "bytes"
+      }
+    ],
+    "name": "testDynamicEncoder",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
 """
 fun createTestAbi(json: Json) = json.parseToJsonElement(testAbiRaw).jsonArray
