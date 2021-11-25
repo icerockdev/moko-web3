@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * @param jsonrpc version of json-rpc request
  * @param id id to filter by
  * @param result current identification for request with the same id
- * @param method current name
+ * @param method current method
  * @param params information for subscribed events
  */
 @Serializable
