@@ -33,31 +33,31 @@ class SmartContract(
     val contractAddress: ContractAddress,
     private val abiJson: JsonArray
 ) {
-    private fun makeAbiDeserializer(method: String): DeserializationStrategy<List<Any?>> =
-        object : DeserializationStrategy<List<Any?>> {
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> makeAbiDeserializer(method: String): DeserializationStrategy<List<T>> =
+        object : DeserializationStrategy<List<T>> {
             override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
                 serialName = "StringAbiPrimitiveDeserializer",
                 kind = PrimitiveKind.STRING
             )
-            override fun deserialize(decoder: Decoder): List<Any?> {
+            override fun deserialize(decoder: Decoder): List<T> {
                 val abiResult = HexString(decoder.decodeString())
-                return ABIDecoder.decodeCallDataForOutputs(abiJson, method, abiResult)
+                return ABIDecoder.decodeCallDataForOutputs(abiJson, method, abiResult) as List<T>
             }
         }
 
-    fun readRequest(
+    fun <T> readRequest(
         method: String,
         params: List<Any>
-    ): Web3RpcRequest<JsonElement, List<Any?>> {
+    ): Web3RpcRequest<JsonElement, List<T>> {
         val data = encodeCallDataForMethod(abiJson, method, params)
         return Web3Requests.call(contractAddress, data, makeAbiDeserializer(method))
     }
 
-    @Suppress("UNCHECKED_CAST")
     suspend fun <T> read(
         method: String,
         params: List<Any>,
-    ): T = executor.executeBatch(readRequest(method, params)).first() as T
+    ): List<T> = executor.executeBatch(readRequest<T>(method, params)).first()
 
     @Web3Stub
     fun writeRequest(
