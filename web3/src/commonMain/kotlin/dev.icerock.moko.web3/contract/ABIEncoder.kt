@@ -7,6 +7,7 @@ package dev.icerock.moko.web3.contract
 import com.soywiz.kbignum.bi
 import dev.icerock.moko.web3.contract.internal.AbiEntityNotFoundException
 import dev.icerock.moko.web3.crypto.KeccakId
+import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.hex.internal.toHex
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.serialization.json.JsonArray
@@ -21,7 +22,7 @@ object ABIEncoder {
     @Suppress("UNCHECKED_CAST")
     private fun <T> Encoder<T>.encodeUnchecked(value: Any?) = encode(value as T)
 
-    fun encodeCallDataForMethod(abi: JsonArray, method: String, params: List<Any>): String {
+    fun encodeCallDataForMethod(abi: JsonArray, method: String, params: List<Any>): HexString {
         val methodAbi: JsonObject = abi.map { it.jsonObject }
             .firstOrNull { it["name"]?.jsonPrimitive?.contentOrNull == method }
             ?: throw AbiEntityNotFoundException(method, abi)
@@ -33,7 +34,7 @@ object ABIEncoder {
 
         val data = methodSignature + encodeCallData(inputParams, params)
 
-        return "0x" + data.toHex().lowercase()
+        return HexString(data)
     }
 
     fun encodeCallData(inputParams: List<JsonObject>, params: List<Any?>): ByteArray {

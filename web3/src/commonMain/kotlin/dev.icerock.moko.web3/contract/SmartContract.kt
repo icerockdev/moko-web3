@@ -12,10 +12,15 @@ import dev.icerock.moko.web3.Web3Executor
 import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.annotation.Web3Stub
 import dev.icerock.moko.web3.contract.ABIEncoder.encodeCallDataForMethod
+import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.requests.Web3Requests
 import dev.icerock.moko.web3.requests.executeBatch
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -28,31 +33,31 @@ class SmartContract(
     val contractAddress: ContractAddress,
     private val abiJson: JsonArray
 ) {
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
-    private val methodsAbi: Map<String, JsonObject> = abiJson
-        .map { it.jsonObject }
-        .filter { it.containsKey("name") }
-        .associateBy { it.getValue("name").jsonPrimitive.content }
+    private fun makeAbiDeserializer(method: String): DeserializationStrategy<List<Any?>> =
+        object : DeserializationStrategy<List<Any?>> {
+            override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
+                serialName = "StringAbiPrimitiveDeserializer",
+                kind = PrimitiveKind.STRING
+            )
+            override fun deserialize(decoder: Decoder): List<Any?> {
+                val abiResult = HexString(decoder.decodeString())
+                return ABIDecoder.decodeCallDataForOutputs(abiJson, method, abiResult)
+            }
+        }
 
-    fun <T> readRequest(
+    fun readRequest(
         method: String,
-        params: List<Any>,
-        from: WalletAddress? = null,
-        dataDeserializer: DeserializationStrategy<T>
-    ): Web3RpcRequest<JsonElement, T> {
-        val transactionCall = encodeTransaction(method, params, from)
-        val data = json.encodeToJsonElement(ContractRPC.serializer(), transactionCall)
-        return Web3Requests.call(data, dataDeserializer)
+        params: List<Any>
+    ): Web3RpcRequest<JsonElement, List<Any?>> {
+        val data = encodeCallDataForMethod(abiJson, method, params)
+        return Web3Requests.call(contractAddress, data, makeAbiDeserializer(method))
     }
 
+    @Suppress("UNCHECKED_CAST")
     suspend fun <T> read(
         method: String,
         params: List<Any>,
-        from: WalletAddress? = null,
-        dataSerializer: KSerializer<T>
-    ): T = executor.executeBatch(readRequest(method, params, from, dataSerializer)).first()
+    ): T = executor.executeBatch(readRequest(method, params)).first() as T
 
     @Web3Stub
     fun writeRequest(
@@ -61,10 +66,7 @@ class SmartContract(
         from: WalletAddress? = null,
         value: BigInt?
     ): Web3RpcRequest<String, TransactionHash> {
-        val transactionCall = encodeTransaction(method, params, from, value)
-        val data = json.encodeToJsonElement(ContractRPC.serializer(), transactionCall)
-        val signedTransaction: String = signTransaction(data)
-        return Web3Requests.send(signedTransaction)
+        TODO("For future releases")
     }
 
     @Web3Stub
@@ -77,22 +79,7 @@ class SmartContract(
 
     @Web3Stub
     fun signTransaction(data: JsonElement): String {
-        TODO()
-    }
-
-    fun encodeTransaction(
-        method: String,
-        params: List<Any>,
-        from: WalletAddress? = null,
-        value: BigInt? = null
-    ): ContractRPC {
-        val callData: String = encodeCallDataForMethod(abiJson, method, params)
-        return ContractRPC(
-            to = contractAddress.prefixed,
-            from = from?.prefixed,
-            data = callData,
-            value = value
-        )
+        TODO("For future release")
     }
 }
 

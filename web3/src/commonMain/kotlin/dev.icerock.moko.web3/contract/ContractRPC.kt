@@ -6,15 +6,13 @@
 
 package dev.icerock.moko.web3.contract
 
-import com.soywiz.kbignum.BigInt
+import dev.icerock.moko.web3.ContractAddress
 import dev.icerock.moko.web3.serializer.BigIntSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 
 @Serializable
 data class ContractRPC(
-    val to: String,
-    val from: String?,
-    val data: String,
-    val value: BigInt?
+    val contractAddress: ContractAddress,
+    val callData: String,
 )
