@@ -17,7 +17,7 @@ internal fun String.hexStringFillToSizedHex(size: Int): String {
         }
         if (!isStrictlyValid)
             append("0")
-        append(this)
+        append(this@hexStringFillToSizedHex)
     }
 }
 
