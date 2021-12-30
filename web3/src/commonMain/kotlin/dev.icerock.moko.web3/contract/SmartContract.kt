@@ -34,35 +34,37 @@ class SmartContract(
     private val abiJson: JsonArray
 ) {
     @Suppress("UNCHECKED_CAST")
-    private fun <T> makeAbiDeserializer(method: String): DeserializationStrategy<List<T>> =
-        object : DeserializationStrategy<List<T>> {
+    private fun <T> makeAbiDeserializer(method: String, mapper: (List<Any?>) -> T): DeserializationStrategy<T> =
+        object : DeserializationStrategy<T> {
             override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
                 serialName = "StringAbiPrimitiveDeserializer",
                 kind = PrimitiveKind.STRING
             )
-            override fun deserialize(decoder: Decoder): List<T> {
+            override fun deserialize(decoder: Decoder): T {
                 val abiResult = HexString(decoder.decodeString())
-                return ABIDecoder.decodeCallDataForOutputs(abiJson, method, abiResult) as List<T>
+                return ABIDecoder.decodeCallDataForOutputs(abiJson, method, abiResult).let(mapper)
             }
         }
 
     fun <T> readRequest(
         method: String,
-        params: List<Any>
-    ): Web3RpcRequest<JsonElement, List<T>> {
+        params: List<Any>,
+        mapper: (List<Any?>) -> T
+    ): Web3RpcRequest<JsonElement, T> {
         val data = encodeMethod(method, params)
-        return Web3Requests.call(contractAddress, data, makeAbiDeserializer(method))
+        return Web3Requests.call(contractAddress, data, makeAbiDeserializer(method, mapper))
     }
 
     fun encodeMethod(
         method: String,
         params: List<Any>
-    ) = encodeCallDataForMethod(abiJson, method, params)
+    ): HexString = encodeCallDataForMethod(abiJson, method, params)
 
     suspend fun <T> read(
         method: String,
         params: List<Any>,
-    ): List<T> = executor.executeBatch(readRequest<T>(method, params)).first()
+        mapper: (List<Any?>) -> T
+    ): T = executor.executeBatch(readRequest(method, params, mapper)).first()
 
     @Web3Stub
     fun writeRequest(
