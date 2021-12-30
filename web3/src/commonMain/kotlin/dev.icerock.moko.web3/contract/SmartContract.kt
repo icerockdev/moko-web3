@@ -50,9 +50,14 @@ class SmartContract(
         method: String,
         params: List<Any>
     ): Web3RpcRequest<JsonElement, List<T>> {
-        val data = encodeCallDataForMethod(abiJson, method, params)
+        val data = encodeMethod(method, params)
         return Web3Requests.call(contractAddress, data, makeAbiDeserializer(method))
     }
+
+    fun encodeMethod(
+        method: String,
+        params: List<Any>
+    ) = encodeCallDataForMethod(abiJson, method, params)
 
     suspend fun <T> read(
         method: String,
