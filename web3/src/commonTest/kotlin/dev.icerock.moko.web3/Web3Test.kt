@@ -386,4 +386,14 @@ class Web3Test {
                 .collect { println("Log $it caught!") }
         }
     }
+
+    @Test
+    fun legacyTransactionForming() {
+        runBlocking {
+            val web3 = Web3("https://api.avax-test.network/ext/bc/C/rpc")
+            val price = web3.getGasPrice()
+            println("GAS Price: $price")
+            println("GAS Limit: ${web3.getEstimateGas(price)}")
+        }
+    }
 }

@@ -42,6 +42,8 @@ class SmartContract(
             )
             override fun deserialize(decoder: Decoder): T {
                 val abiResult = HexString(decoder.decodeString())
+                println(method)
+                println(abiResult)
                 return ABIDecoder.decodeCallDataForOutputs(abiJson, method, abiResult).let(mapper)
             }
         }

@@ -52,6 +52,9 @@ suspend fun Web3Executor.send(
 
 suspend fun Web3Executor.getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
 
+suspend fun Web3Executor.getEstimateGas(gasPrice: BigInt, to: EthereumAddress = EthereumAddress.AddressZero): BigInt =
+    executeBatch(Web3Requests.getEstimateGas(gasPrice, to)).first()
+
 suspend fun Web3Executor.getBlockNumber(): BigInt = executeBatch(Web3Requests.getBlockNumber()).first()
 
 suspend fun Web3Executor.getBlockByNumber(blockState: BlockState): BlockInfo? =

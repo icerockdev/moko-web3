@@ -84,7 +84,7 @@ object ABIEncoder {
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    private fun generateMethodSignature(
+    fun generateMethodSignature(
         method: String,
         inputParams: List<JsonObject>
     ): ByteArray {

@@ -6,6 +6,7 @@ package dev.icerock.moko.web3.contract
 
 import dev.icerock.moko.web3.contract.ABIEncoder.PART_SIZE
 import dev.icerock.moko.web3.hex.HexString
+import dev.icerock.moko.web3.hex.internal.toHex
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -92,14 +93,18 @@ object ABIDecoder {
         abi: JsonObject,
         fieldName: String,
         callData: ByteArray
-    ): List<Any?> = decodeCallData(
-        paramTypes = abi.getValue(fieldName)
-            .jsonArray
-            .map { param ->
-                param.jsonObject
-            },
-        callData = callData
-    )
+    ): List<Any?> = try {
+        decodeCallData(
+            paramTypes = abi.getValue(fieldName)
+                .jsonArray
+                .map { param ->
+                    param.jsonObject
+                },
+            callData = callData
+        )
+    } catch (e: IllegalStateException) {
+        error("Exception occurred while processing the result of $fieldName.\n\n${e.message}")
+    }
 
     /**
      * Read the warning below
@@ -129,13 +134,18 @@ object ABIDecoder {
         )
 
     fun decodeCallData(paramTypes: List<JsonObject>, callData: ByteArray): List<Any?> {
+        if (callData.isEmpty())
+            return listOf()
+
         val headSize = paramTypes.size * PART_SIZE
 
         require(callData.size % PART_SIZE == 0) {
             "Call data should be padded correctly!"
         }
         require(callData.size >= headSize) {
-            "Call data size should be at least equals params count multiplied by 32, because it should be the head size."
+            "Call data size should be at least equals params count multiplied by 32, " +
+                    "because it should be the head size." +
+                    "Param types: $paramTypes; CallData: ${callData.toHex()}"
         }
 
         val decoders = paramTypes.map(::resolveEncoderForType)
