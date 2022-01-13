@@ -4,23 +4,19 @@
 
 package dev.icerock.moko.web3.contract
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
 enum class NamedEncoders(
     val typeAnnotation: String,
     val encoder: Encoder<*>
 ) {
-    UInt8(typeAnnotation = "uint8", encoder = UInt256Param),
-    UInt256(typeAnnotation = "uint256", encoder = UInt256Param),
     Address(typeAnnotation = "address", encoder = AddressParam),
     StringBytes(typeAnnotation = "string", encoder = StringParam),
-    Bytes(typeAnnotation = "bytes", encoder = BytesParam);
+    Bytes(typeAnnotation = "bytes", encoder = BytesParam),
+    BoolBytes(typeAnnotation = "bool", encoder = BoolParam);
 
     companion object {
         fun forType(typeAnnotation: String) = values()
@@ -30,6 +26,8 @@ enum class NamedEncoders(
 }
 
 private val listTypeRegex = Regex("(.*)\\[]")
+private val uintTypeRegex = Regex("uint.+")
+private val bytesTypeRegex = Regex("bytes(.+)")
 
 fun resolveEncoderForType(param: JsonObject): Encoder<*> {
     val typeAnnotation = param.getValue(key = "type").jsonPrimitive.content
@@ -41,6 +39,11 @@ fun resolveEncoderForType(param: JsonObject): Encoder<*> {
                 put("type", JsonPrimitive(subtypeAnnotation))
             }
             ListParam(resolveEncoderForType(subParam))
+        }
+        typeAnnotation.matches(uintTypeRegex) -> UInt256Param
+        typeAnnotation.matches(bytesTypeRegex) -> {
+            val (size) = bytesTypeRegex.find(typeAnnotation)!!.destructured
+            SizedBytesParam(size.toInt())
         }
         typeAnnotation == "tuple" -> TupleParam(param)
         else -> NamedEncoders.forType(typeAnnotation).encoder

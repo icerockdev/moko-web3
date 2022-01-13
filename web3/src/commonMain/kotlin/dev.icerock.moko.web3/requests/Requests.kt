@@ -10,7 +10,9 @@ import dev.icerock.moko.web3.entity.LogEvent
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.hex.Hex32String
+import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.requests.polling.shortPollingUntilNotNull
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonElement
 
@@ -37,16 +39,21 @@ suspend fun Web3Executor.getNativeTransactionCount(
 ): BigInt = executeBatch(Web3Requests.getNativeTransactionCount(walletAddress, blockState)).first()
 
 suspend fun <T> Web3Executor.call(
-    transactionCall: JsonElement,
-    responseDataSerializer: KSerializer<T>,
+    contractAddress: ContractAddress,
+    callData: HexString,
+    // deserialize from calldata to normal type
+    dataDeserializer: DeserializationStrategy<T>,
     blockState: BlockState = BlockState.Latest,
-): T = executeBatch(Web3Requests.call(transactionCall, responseDataSerializer, blockState)).first()
+): T = executeBatch(Web3Requests.call(contractAddress, callData, dataDeserializer, blockState)).first()
 
 suspend fun Web3Executor.send(
     signedTransaction: String
 ): TransactionHash = executeBatch(Web3Requests.send(signedTransaction)).first()
 
 suspend fun Web3Executor.getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
+
+suspend fun Web3Executor.getEstimateGas(gasPrice: BigInt, to: EthereumAddress = EthereumAddress.AddressZero): BigInt =
+    executeBatch(Web3Requests.getEstimateGas(gasPrice, to)).first()
 
 suspend fun Web3Executor.getBlockNumber(): BigInt = executeBatch(Web3Requests.getBlockNumber()).first()
 

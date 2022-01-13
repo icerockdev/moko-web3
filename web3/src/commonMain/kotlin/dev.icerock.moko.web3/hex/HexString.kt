@@ -34,7 +34,7 @@ open class HexString {
             override val size get() = withoutPrefix.length / 2
             override val type get() = SourceType.String
             override fun fastEquals(other: HexString): Boolean? = when (other.sourceType) {
-                SourceType.String -> (withoutPrefix == other.withoutPrefix).also(::println)
+                SourceType.String -> withoutPrefix == other.withoutPrefix
                 else -> null
             }
         }
@@ -126,13 +126,19 @@ open class HexString {
     }
 
 
-    interface Factory<T> {
+    interface Factory<T : HexString> {
         fun createInstance(value: String): T
-        fun createInstance(value: ByteArray): T = createInstance(value.toHex())
-        fun createInstance(value: BigInt): T = createInstance(value.toString())
+        fun createInstance(value: ByteArray): T = createInstance(HexString(value).prefixed)
+        fun createInstance(value: BigInt): T = createInstance(HexString(value).prefixed)
     }
-    interface SizedFactory<T> : Factory<T> {
+    interface SizedFactory<T : HexString> : Factory<T> {
         val size: Int
+
+        override fun createInstance(value: ByteArray): T = HexString(value)
+            .fillToSizedHex(typeclass = this)
+
+        override fun createInstance(value: BigInt): T = HexString(value)
+            .fillToSizedHex(typeclass = this)
     }
 
     object Strict : Factory<HexString> {

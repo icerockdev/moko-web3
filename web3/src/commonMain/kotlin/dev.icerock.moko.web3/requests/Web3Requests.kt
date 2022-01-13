@@ -4,24 +4,25 @@
 
 package dev.icerock.moko.web3.requests
 
+import com.soywiz.kbignum.BigInt
+import com.soywiz.kbignum.bi
 import dev.icerock.moko.web3.BlockHash
 import dev.icerock.moko.web3.BlockInfo
 import dev.icerock.moko.web3.BlockState
 import dev.icerock.moko.web3.BlockStateSerializer
+import dev.icerock.moko.web3.ContractAddress
 import dev.icerock.moko.web3.EthereumAddress
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
-import dev.icerock.moko.web3.Web3
 import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.entity.LogEvent
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
 import dev.icerock.moko.web3.hex.Hex32String
+import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.serializer.BigIntSerializer
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
@@ -37,15 +38,26 @@ object Web3Requests {
         paramsSerializer = String.serializer(),
         resultSerializer = TransactionHash.serializer()
     )
+
+    @Serializable
+    private class CallDataObject(
+        val to: ContractAddress,
+        val data: HexString,
+    )
     fun <T> call(
-        transactionCall: JsonElement,
-        responseDataDeserializer: DeserializationStrategy<T>,
+        contractAddress: ContractAddress,
+        callData: HexString,
+        // deserialize from calldata to normal type
+        dataDeserializer: DeserializationStrategy<T>,
         blockState: BlockState = BlockState.Latest
     ) = Web3RpcRequest(
         method = "eth_call",
-        params = listOf(transactionCall, JsonPrimitive(blockState.toString())),
+        params = listOf(
+            Json.encodeToJsonElement(CallDataObject(contractAddress, callData)),
+            JsonPrimitive(blockState.toString())
+        ),
         paramsSerializer = JsonElement.serializer(),
-        resultSerializer = responseDataDeserializer
+        resultSerializer = dataDeserializer
     )
     fun getNativeTransactionCount(
         walletAddress: WalletAddress,
@@ -85,6 +97,21 @@ object Web3Requests {
         method = "eth_gasPrice",
         params = listOf(),
         paramsSerializer = ListSerializer(Unit.serializer()),
+        resultSerializer = BigIntSerializer
+    )
+    @Serializable
+    private data class GetEstimateGasObject(
+        val to: EthereumAddress,
+        @Serializable(with = BigIntSerializer::class)
+        val gasPrice: BigInt
+    )
+    fun getEstimateGas(
+        gasPrice: BigInt,
+        to: EthereumAddress = EthereumAddress.AddressZero,
+    ): Web3RpcRequest<*, BigInt> = Web3RpcRequest(
+        method = "eth_estimateGas",
+        params = listOf(GetEstimateGasObject(to, gasPrice)),
+        paramsSerializer = GetEstimateGasObject.serializer(),
         resultSerializer = BigIntSerializer
     )
     fun getBlockNumber() = Web3RpcRequest(

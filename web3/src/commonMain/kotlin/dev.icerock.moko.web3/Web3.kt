@@ -32,12 +32,12 @@ class Web3 @DelicateWeb3Api constructor(
     constructor(endpointUrl: String) : this(
         httpClient = HttpClient {
             install(DefaultRequest) {
-                // some networks require content type to be set
+                // some networks require the content type to be set
                 contentType(ContentType.Application.Json)
             }
         },
         json = Json {
-            // some networks return additional info in models that may not be documented
+            // some networks return an additional info in models that may not be documented
             ignoreUnknownKeys = true
         },
         endpointUrl = endpointUrl
