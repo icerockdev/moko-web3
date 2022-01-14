@@ -1,19 +1,11 @@
 /*
  * Copyright 2021 IceRock MAG Inc. Use of this source code is governed by the Apache 2.0 license.
  */
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("multiplatform-library-convention")
-    id("dev.icerock.mobile.multiplatform.android-manifest")
     id("publication-convention")
     id("kotlinx-serialization")
-}
-
-android {
-    testOptions {
-        unitTests.isReturnDefaultValues = true
-    }
 }
 
 kotlin {
@@ -37,10 +29,9 @@ dependencies {
     commonTestImplementation(libs.kotlinTestAnnotations)
     commonTestImplementation(libs.ktorClientMock)
 
-    androidMainImplementation(libs.ktorClientOkHttp)
-    androidTestImplementation(libs.ktorClientOkHttp)
-    androidTestImplementation(libs.kotlinTest)
-    androidTestImplementation(libs.kotlinTestJunit)
+    jvmMainImplementation(libs.ktorClientOkHttp)
+    jvmTestImplementation(libs.kotlinTest)
+    jvmTestImplementation(libs.kotlinTestJunit)
 
     iosMainImplementation(libs.ktorClientIos)
     iosTestImplementation(libs.ktorClientIos)

@@ -19,7 +19,7 @@ fun HexString.fillToStrict() = fillToSizedHex(
  *
  * HexString("0x10").fillToHex8() - Hex8String("0x0000000000000010")
  */
-fun <T> HexString.fillToSizedHex(typeclass: HexString.SizedFactory<T>): T = when (sourceType) {
+fun <T : HexString> HexString.fillToSizedHex(typeclass: HexString.SizedFactory<T>): T = when (sourceType) {
     HexString.SourceType.ByteArray -> byteArray
         .hexBytesFillToSizedHex(typeclass.size)
         .let(typeclass::createInstance)

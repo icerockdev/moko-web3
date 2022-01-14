@@ -8,13 +8,11 @@ package dev.icerock.moko.web3
 
 import com.soywiz.kbignum.BigInt
 import com.soywiz.kbignum.bi
-import dev.icerock.moko.web3.contract.ABIDecoder
 import dev.icerock.moko.web3.contract.ABIEncoder
 import dev.icerock.moko.web3.contract.AddressParam
 import dev.icerock.moko.web3.contract.SmartContract
 import dev.icerock.moko.web3.contract.UInt256Param
 import dev.icerock.moko.web3.contract.createErc20TokenAbi
-import dev.icerock.moko.web3.hex.internal.hexStringAddLeadingZeroIfNeed
 import dev.icerock.moko.web3.hex.internal.toHex
 import dev.icerock.moko.web3.entity.RpcResponse
 import dev.icerock.moko.web3.entity.TransactionReceipt
@@ -34,8 +32,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -175,7 +171,8 @@ class Web3Test {
         val addr = "9a0A2498Ec7f105ef65586592a5B6d4Da3590D74".bi(16)
 
         val result = runTest {
-            smartContract.encodeTransaction(
+            ABIEncoder.encodeCallDataForMethod(
+                abi = createErc20TokenAbi(json),
                 method = "transfer",
                 params = listOf(
                     addr,
@@ -185,8 +182,8 @@ class Web3Test {
         }
 
         assertEquals(
-            expected = "0xa9059cbb0000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d740000000000000000000000000000000000000000000000000000000010001000",
-            actual = result.data
+            expected = "0xa9059cbb0000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d740000000000000000000000000000000000000000000000000000000010001000".let(::HexString),
+            actual = result
         )
     }
 
@@ -243,7 +240,8 @@ class Web3Test {
         val list = listOf(address, bigInt)
 
         val result = runTest {
-            smartContract.encodeTransaction(
+            ABIEncoder.encodeCallDataForMethod(
+                abi = createTestAbi(json),
                 method = "test",
                 params = listOf(
                     address,
@@ -257,8 +255,8 @@ class Web3Test {
             )
         }
         assertEquals(
-            expected = "0x170159cd0000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000020000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a00000000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000020000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000",
-            actual = result.data
+            expected = "0x170159cd0000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000020000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a00000000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000020000000000000000000000009a0a2498ec7f105ef65586592a5b6d4da3590d74000000000000000000000000000000000000000000000000016345785d8a0000".let(::HexString),
+            actual = result
         )
     }
 
@@ -386,6 +384,16 @@ class Web3Test {
             val web3 = Web3("https://rinkeby.infura.io/v3/5a3d2c30cf72450c9e13b0570a737b62")
             web3.newLogsShortPolling(pollingInterval = 5_000)
                 .collect { println("Log $it caught!") }
+        }
+    }
+
+//    @Test
+    fun legacyTransactionForming() {
+        runBlocking {
+            val web3 = Web3("https://api.avax-test.network/ext/bc/C/rpc")
+            val price = web3.getGasPrice()
+            println("GAS Price: $price")
+            println("GAS Limit: ${web3.getEstimateGas(price)}")
         }
     }
 }
