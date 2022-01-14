@@ -387,7 +387,7 @@ class Web3Test {
         }
     }
 
-    @Test
+//    @Test
     fun legacyTransactionForming() {
         runBlocking {
             val web3 = Web3("https://api.avax-test.network/ext/bc/C/rpc")
