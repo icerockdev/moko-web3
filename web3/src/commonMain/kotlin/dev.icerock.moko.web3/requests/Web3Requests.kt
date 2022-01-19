@@ -22,6 +22,7 @@ import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.serializer.BigIntSerializer
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
@@ -44,6 +45,7 @@ object Web3Requests {
         val to: ContractAddress,
         val data: HexString,
     )
+
     fun <T> call(
         contractAddress: ContractAddress,
         callData: HexString,
@@ -59,6 +61,7 @@ object Web3Requests {
         paramsSerializer = JsonElement.serializer(),
         resultSerializer = dataDeserializer
     )
+
     fun getNativeTransactionCount(
         walletAddress: WalletAddress,
         blockState: BlockState = BlockState.Pending
@@ -68,6 +71,7 @@ object Web3Requests {
         paramsSerializer = String.serializer(),
         resultSerializer = BigIntSerializer
     )
+
     fun getTransactionReceipt(
         transactionHash: TransactionHash
     ) = Web3RpcRequest(
@@ -76,6 +80,7 @@ object Web3Requests {
         paramsSerializer = String.serializer(),
         resultSerializer = TransactionReceipt.serializer().nullable
     )
+
     fun getNativeBalance(
         walletAddress: WalletAddress,
         blockState: BlockState = BlockState.Latest
@@ -85,6 +90,7 @@ object Web3Requests {
         paramsSerializer = String.serializer(),
         resultSerializer = BigIntSerializer
     )
+
     fun getTransaction(
         transactionHash: TransactionHash
     ) = Web3RpcRequest(
@@ -93,18 +99,21 @@ object Web3Requests {
         paramsSerializer = String.serializer(),
         resultSerializer = Transaction.serializer()
     )
+
     fun getGasPrice() = Web3RpcRequest(
         method = "eth_gasPrice",
         params = listOf(),
         paramsSerializer = ListSerializer(Unit.serializer()),
         resultSerializer = BigIntSerializer
     )
+
     @Serializable
     private data class GetEstimateGasObject(
         val to: EthereumAddress,
         @Serializable(with = BigIntSerializer::class)
         val gasPrice: BigInt
     )
+
     fun getEstimateGas(
         gasPrice: BigInt,
         to: EthereumAddress = EthereumAddress.AddressZero,
@@ -114,18 +123,54 @@ object Web3Requests {
         paramsSerializer = GetEstimateGasObject.serializer(),
         resultSerializer = BigIntSerializer
     )
+
+    @Serializable
+    private data class GetExtendedEstimateGasObject(
+        val from: EthereumAddress,
+        val to: EthereumAddress,
+        @Serializable(with = BigIntSerializer::class)
+        val gasPrice: BigInt,
+        @SerialName("data")
+        val callData: HexString,
+        @Serializable(with = BigIntSerializer::class)
+        val value: BigInt
+    )
+
+    fun getEstimateGas(
+        from: EthereumAddress,
+        gasPrice: BigInt,
+        to: EthereumAddress,
+        callData: HexString,
+        value: BigInt = 0.bi
+    ): Web3RpcRequest<*, BigInt> = Web3RpcRequest(
+        method = "eth_estimateGas",
+        params = listOf(
+            GetExtendedEstimateGasObject(
+                from = from,
+                to = to,
+                gasPrice = gasPrice,
+                callData = callData,
+                value = value
+            )
+        ),
+        paramsSerializer = GetExtendedEstimateGasObject.serializer(),
+        resultSerializer = BigIntSerializer
+    )
+
     fun getBlockNumber() = Web3RpcRequest(
         method = "eth_blockNumber",
         params = listOf(),
         paramsSerializer = ListSerializer(Unit.serializer()),
         resultSerializer = BigIntSerializer
     )
+
     fun getBlockByNumber(block: BlockState) = Web3RpcRequest(
         method = "eth_getBlockByNumber",
         params = listOf(Json.encodeToJsonElement(BlockStateSerializer, block), JsonPrimitive(value = true)),
         paramsSerializer = JsonElement.serializer(),
         resultSerializer = BlockInfo.serializer().nullable
     )
+
     @Serializable
     private data class GetLogsObject(
         val address: EthereumAddress?,
@@ -134,6 +179,7 @@ object Web3Requests {
         val topics: List<Hex32String>?,
         val blockHash: BlockHash?
     )
+
     fun getLogs(
         address: EthereumAddress? = null,
         fromBlock: BlockState? = null,

@@ -5,7 +5,16 @@
 package dev.icerock.moko.web3.requests
 
 import com.soywiz.kbignum.BigInt
-import dev.icerock.moko.web3.*
+import com.soywiz.kbignum.bi
+import dev.icerock.moko.web3.BlockHash
+import dev.icerock.moko.web3.BlockInfo
+import dev.icerock.moko.web3.BlockState
+import dev.icerock.moko.web3.ContractAddress
+import dev.icerock.moko.web3.EthereumAddress
+import dev.icerock.moko.web3.TransactionHash
+import dev.icerock.moko.web3.WalletAddress
+import dev.icerock.moko.web3.Web3Executor
+import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.entity.LogEvent
 import dev.icerock.moko.web3.entity.Transaction
 import dev.icerock.moko.web3.entity.TransactionReceipt
@@ -13,8 +22,6 @@ import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.requests.polling.shortPollingUntilNotNull
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.JsonElement
 
 
 suspend fun <T> Web3Executor.executeBatch(vararg requests: Web3RpcRequest<*, T>): List<T> =
@@ -54,6 +61,24 @@ suspend fun Web3Executor.getGasPrice(): BigInt = executeBatch(Web3Requests.getGa
 
 suspend fun Web3Executor.getEstimateGas(gasPrice: BigInt, to: EthereumAddress = EthereumAddress.AddressZero): BigInt =
     executeBatch(Web3Requests.getEstimateGas(gasPrice, to)).first()
+
+suspend fun Web3Executor.getEstimateGas(
+    from: EthereumAddress,
+    gasPrice: BigInt,
+    to: EthereumAddress,
+    callData: HexString,
+    value: BigInt = 0.bi
+): BigInt =
+    executeBatch(
+        Web3Requests.getEstimateGas(
+            from = from,
+            gasPrice = gasPrice,
+            to = to,
+            callData = callData,
+            value = value
+        )
+    ).first()
+
 
 suspend fun Web3Executor.getBlockNumber(): BigInt = executeBatch(Web3Requests.getBlockNumber()).first()
 
