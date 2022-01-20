@@ -5,7 +5,6 @@
 package dev.icerock.moko.web3.requests
 
 import com.soywiz.kbignum.BigInt
-import com.soywiz.kbignum.bi
 import dev.icerock.moko.web3.BlockHash
 import dev.icerock.moko.web3.BlockInfo
 import dev.icerock.moko.web3.BlockState
@@ -126,22 +125,22 @@ object Web3Requests {
 
     @Serializable
     private data class GetExtendedEstimateGasObject(
-        val from: EthereumAddress,
+        val from: EthereumAddress?,
         val to: EthereumAddress,
         @Serializable(with = BigIntSerializer::class)
-        val gasPrice: BigInt,
+        val gasPrice: BigInt?,
         @SerialName("data")
-        val callData: HexString,
+        val callData: HexString?,
         @Serializable(with = BigIntSerializer::class)
-        val value: BigInt
+        val value: BigInt?
     )
 
     fun getEstimateGas(
-        from: EthereumAddress,
-        gasPrice: BigInt,
+        from: EthereumAddress?,
+        gasPrice: BigInt?,
         to: EthereumAddress,
-        callData: HexString,
-        value: BigInt = 0.bi
+        callData: HexString?,
+        value: BigInt?
     ): Web3RpcRequest<*, BigInt> = Web3RpcRequest(
         method = "eth_estimateGas",
         params = listOf(
