@@ -63,11 +63,11 @@ suspend fun Web3Executor.getEstimateGas(gasPrice: BigInt, to: EthereumAddress = 
     executeBatch(Web3Requests.getEstimateGas(gasPrice, to)).first()
 
 suspend fun Web3Executor.getEstimateGas(
-    from: EthereumAddress,
-    gasPrice: BigInt,
+    from: EthereumAddress? = null,
+    gasPrice: BigInt? = null,
     to: EthereumAddress,
-    callData: HexString,
-    value: BigInt = 0.bi
+    callData: HexString? = null,
+    value: BigInt? = null
 ): BigInt =
     executeBatch(
         Web3Requests.getEstimateGas(
