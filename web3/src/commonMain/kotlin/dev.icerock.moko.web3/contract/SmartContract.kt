@@ -5,6 +5,8 @@
 package dev.icerock.moko.web3.contract
 
 import com.soywiz.kbignum.BigInt
+import dev.icerock.moko.web3.BlockHash
+import dev.icerock.moko.web3.BlockState
 import dev.icerock.moko.web3.ContractAddress
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
@@ -12,9 +14,11 @@ import dev.icerock.moko.web3.Web3Executor
 import dev.icerock.moko.web3.Web3RpcRequest
 import dev.icerock.moko.web3.annotation.Web3Stub
 import dev.icerock.moko.web3.contract.ABIEncoder.encodeCallDataForMethod
+import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.requests.Web3Requests
 import dev.icerock.moko.web3.requests.executeBatch
+import dev.icerock.moko.web3.requests.getLogs
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -65,6 +69,13 @@ class SmartContract(
         params: List<Any>,
         mapper: (List<Any?>) -> T
     ): T = executor.executeBatch(readRequest(method, params, mapper)).first()
+
+    suspend fun getLogs(
+        fromBlock: BlockState? = null,
+        toBlock: BlockState? = null,
+        topics: List<Hex32String>? = null,
+        blockHash: BlockHash? = null
+    ) = executor.getLogs(contractAddress, fromBlock, toBlock, topics, blockHash)
 
     @Web3Stub
     fun writeRequest(
