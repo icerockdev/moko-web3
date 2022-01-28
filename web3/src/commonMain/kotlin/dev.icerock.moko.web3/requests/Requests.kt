@@ -96,7 +96,7 @@ suspend fun Web3Executor.getLogs(
 suspend fun Web3Executor.waitForTransactionReceipt(
     hash: TransactionHash,
     // one minute is the default timeout
-    timeOutMillis: Long? = 1 * 60 * 1_000,
+    timeOutMillis: Long? = 1L * 60L * 1_000L,
     // interval is the default interval,
     intervalMillis: Long = 1_000
 ): TransactionReceipt =
