@@ -5,10 +5,13 @@
 package dev.icerock.moko.web3.contract
 
 import dev.icerock.moko.web3.contract.ABIEncoder.PART_SIZE
+import dev.icerock.moko.web3.entity.LogEvent
+import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.hex.HexString
 import dev.icerock.moko.web3.hex.internal.toHex
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
@@ -23,6 +26,38 @@ import kotlin.jvm.JvmName
  * - Decode callData using raw param types (List<String>)
  */
 object ABIDecoder {
+
+    fun decodeLogEvent(abis: JsonArray, event: LogEvent): List<Any?> =
+        decodeLogEvent(
+            abi = abis
+                .map { it.jsonObject }
+                .filter { it["type"]?.jsonPrimitive?.contentOrNull == "event" }
+                .first { ABIEncoder.hashEventSignature(it) == event.topics[0] },
+            event = event
+        )
+
+    fun decodeLogEvent(abi: JsonObject, event: LogEvent): List<Any?> {
+        val topicsIterator = event.topics.drop(n = 1).iterator()
+        val dataIterator = event.data.withoutPrefix
+            .chunked(size = PART_SIZE * 2) { HexString(it.toString()) }
+            .iterator()
+
+        val actualData = abi["inputs"]!!
+            .jsonArray
+            .map { it.jsonObject }
+            .map { param ->
+                when (param["indexed"]?.jsonPrimitive?.boolean ?: false) {
+                    true -> topicsIterator.next()
+                    false -> dataIterator.next()
+                }
+            }
+            .fold(initial = byteArrayOf()) { acc, hex ->
+                acc + hex.byteArray
+            }
+
+        return decodeCallDataForObjectInputs(abi, actualData)
+    }
+
     // --------------------- //
     // Decoding with outputs //
     // --------------------- //

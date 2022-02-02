@@ -59,15 +59,12 @@ suspend fun Web3Executor.send(
 
 suspend fun Web3Executor.getGasPrice(): BigInt = executeBatch(Web3Requests.getGasPrice()).first()
 
-suspend fun Web3Executor.getEstimateGas(gasPrice: BigInt, to: EthereumAddress = EthereumAddress.AddressZero): BigInt =
-    executeBatch(Web3Requests.getEstimateGas(gasPrice, to)).first()
-
 suspend fun Web3Executor.getEstimateGas(
-    from: EthereumAddress? = null,
-    gasPrice: BigInt? = null,
+    from: EthereumAddress?,
+    gasPrice: BigInt?,
     to: EthereumAddress,
-    callData: HexString? = null,
-    value: BigInt? = null
+    callData: HexString?,
+    value: BigInt?
 ): BigInt =
     executeBatch(
         Web3Requests.getEstimateGas(
@@ -79,6 +76,12 @@ suspend fun Web3Executor.getEstimateGas(
         )
     ).first()
 
+suspend fun Web3Executor.getEstimateGas(
+    callRpcRequest: CallRpcRequest<*>,
+    from: EthereumAddress?,
+    gasPrice: BigInt?,
+    value: BigInt?
+): BigInt = executeBatch(Web3Requests.getEstimateGas(callRpcRequest, from, gasPrice, value)).first()
 
 suspend fun Web3Executor.getBlockNumber(): BigInt = executeBatch(Web3Requests.getBlockNumber()).first()
 
@@ -89,7 +92,7 @@ suspend fun Web3Executor.getLogs(
     address: EthereumAddress? = null,
     fromBlock: BlockState? = null,
     toBlock: BlockState? = null,
-    topics: List<Hex32String>? = null,
+    topics: List<Hex32String?>? = null,
     blockHash: BlockHash? = null
 ): List<LogEvent>? = executeBatch(Web3Requests.getLogs(address, fromBlock, toBlock, topics, blockHash)).first()
 

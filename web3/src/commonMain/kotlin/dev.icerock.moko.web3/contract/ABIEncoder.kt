@@ -7,8 +7,10 @@ package dev.icerock.moko.web3.contract
 import com.soywiz.kbignum.bi
 import dev.icerock.moko.web3.contract.internal.AbiEntityNotFoundException
 import dev.icerock.moko.web3.crypto.KeccakId
+import dev.icerock.moko.web3.crypto.KeccakParameter
+import dev.icerock.moko.web3.crypto.digestKeccak
+import dev.icerock.moko.web3.hex.Hex32String
 import dev.icerock.moko.web3.hex.HexString
-import dev.icerock.moko.web3.hex.internal.toHex
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -19,6 +21,24 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 object ABIEncoder {
+    fun hashEventSignature(abi: JsonArray, event: String): Hex32String {
+        val eventAbi = abi
+            .map { it.jsonObject }
+            .firstOrNull { it["name"]?.jsonPrimitive?.contentOrNull == event }
+            ?: throw AbiEntityNotFoundException(event, abi)
+
+        return hashEventSignature(eventAbi)
+    }
+
+    fun hashEventSignature(eventAbi: JsonObject): Hex32String {
+        val params: List<JsonObject> =
+            eventAbi.getValue(key = "inputs").jsonArray.map { it.jsonObject }
+
+        val signature = generateSignature(eventAbi["name"]!!.jsonPrimitive.content, params)
+
+        return Hex32String(signature.digestKeccak(KeccakParameter.KECCAK_256))
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T> Encoder<T>.encodeUnchecked(value: Any?) = encode(value as T)
 
@@ -30,7 +50,7 @@ object ABIEncoder {
         val inputParams: List<JsonObject> =
             methodAbi.getValue(key = "inputs").jsonArray.map { it.jsonObject }
 
-        val methodSignature: ByteArray = generateMethodSignature(method, inputParams)
+        val methodSignature: ByteArray = hashMethodSignature(method, inputParams)
 
         val data = methodSignature + encodeCallData(inputParams, params)
 
@@ -84,13 +104,15 @@ object ABIEncoder {
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    fun generateMethodSignature(
+    fun hashMethodSignature(
         method: String,
         inputParams: List<JsonObject>
-    ): ByteArray {
-        val signature = "$method(${generateParamsString(inputParams)})".toByteArray()
-        return KeccakId.get(signature)
-    }
+    ): ByteArray = generateSignature(method, inputParams)
+        .toByteArray()
+        .let(KeccakId::get)
+
+    fun generateSignature(name: String, params: List<JsonObject>): String =
+        "$name(${generateParamsString(params)})"
 
     private fun generateParamsString(inputParams: List<JsonObject>): String = buildString {
         inputParams.forEachIndexed { index, param ->
