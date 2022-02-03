@@ -4,12 +4,17 @@
 
 package dev.icerock.moko.web3.hex
 
+import com.soywiz.kbignum.BigInt
 import dev.icerock.moko.web3.hex.internal.hexBytesFillToSizedHex
 import dev.icerock.moko.web3.hex.internal.hexStringFillToSizedHex
 
 fun HexString.fillToStrict() = fillToSizedHex(
-    object : HexString.SizedFactory<HexString>, HexString.Factory<HexString> by HexString.Lenient {
+    object : HexString.SizedFactory<HexString>, HexString.Factory<HexString> {
         override val size = this@fillToStrict.size
+
+        override fun createInstance(value: String): HexString = HexString.Lenient.createInstance(value)
+        override fun createInstance(value: BigInt): HexString = HexString.Lenient.createInstance(value)
+        override fun createInstance(value: ByteArray): HexString = HexString.Lenient.createInstance(value)
     }
 )
 
