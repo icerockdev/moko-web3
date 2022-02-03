@@ -43,7 +43,7 @@ class Web3 @DelicateWeb3Api constructor(
         endpointUrl = endpointUrl
     )
 
-    override suspend fun <R> executeBatch(requests: List<Web3RpcRequest<*, R>>): List<R> {
+    override suspend fun <R> executeBatch(requests: List<Web3RpcRequest<*, out R>>): List<R> {
         // Used later for logging if exception
         val rawRequests = requests
             .mapIndexed { index, web3Request ->

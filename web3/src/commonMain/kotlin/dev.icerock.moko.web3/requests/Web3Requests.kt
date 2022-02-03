@@ -39,27 +39,13 @@ object Web3Requests {
         resultSerializer = TransactionHash.serializer()
     )
 
-    @Serializable
-    private class CallDataObject(
-        val to: ContractAddress,
-        val data: HexString,
-    )
-
     fun <T> call(
         contractAddress: ContractAddress,
         callData: HexString,
         // deserialize from calldata to normal type
         dataDeserializer: DeserializationStrategy<T>,
         blockState: BlockState = BlockState.Latest
-    ) = Web3RpcRequest(
-        method = "eth_call",
-        params = listOf(
-            Json.encodeToJsonElement(CallDataObject(contractAddress, callData)),
-            JsonPrimitive(blockState.toString())
-        ),
-        paramsSerializer = JsonElement.serializer(),
-        resultSerializer = dataDeserializer
-    )
+    ) = CallRpcRequest(contractAddress, callData, dataDeserializer, blockState)
 
     fun getNativeTransactionCount(
         walletAddress: WalletAddress,
@@ -108,23 +94,6 @@ object Web3Requests {
 
     @Serializable
     private data class GetEstimateGasObject(
-        val to: EthereumAddress,
-        @Serializable(with = BigIntSerializer::class)
-        val gasPrice: BigInt
-    )
-
-    fun getEstimateGas(
-        gasPrice: BigInt,
-        to: EthereumAddress = EthereumAddress.AddressZero,
-    ): Web3RpcRequest<*, BigInt> = Web3RpcRequest(
-        method = "eth_estimateGas",
-        params = listOf(GetEstimateGasObject(to, gasPrice)),
-        paramsSerializer = GetEstimateGasObject.serializer(),
-        resultSerializer = BigIntSerializer
-    )
-
-    @Serializable
-    private data class GetExtendedEstimateGasObject(
         val from: EthereumAddress?,
         val to: EthereumAddress,
         @Serializable(with = BigIntSerializer::class)
@@ -144,7 +113,7 @@ object Web3Requests {
     ): Web3RpcRequest<*, BigInt> = Web3RpcRequest(
         method = "eth_estimateGas",
         params = listOf(
-            GetExtendedEstimateGasObject(
+            GetEstimateGasObject(
                 from = from,
                 to = to,
                 gasPrice = gasPrice,
@@ -152,8 +121,21 @@ object Web3Requests {
                 value = value
             )
         ),
-        paramsSerializer = GetExtendedEstimateGasObject.serializer(),
+        paramsSerializer = GetEstimateGasObject.serializer(),
         resultSerializer = BigIntSerializer
+    )
+
+    fun getEstimateGas(
+        callRpcRequest: CallRpcRequest<*>,
+        from: EthereumAddress?,
+        gasPrice: BigInt?,
+        value: BigInt?
+    ): Web3RpcRequest<*, BigInt> = getEstimateGas(
+        from = from,
+        gasPrice = gasPrice,
+        to = callRpcRequest.contractAddress,
+        callData = callRpcRequest.callData,
+        value = value
     )
 
     fun getBlockNumber() = Web3RpcRequest(
@@ -175,7 +157,7 @@ object Web3Requests {
         val address: EthereumAddress?,
         val fromBlock: BlockState?,
         val toBlock: BlockState?,
-        val topics: List<Hex32String>?,
+        val topics: List<Hex32String?>?,
         val blockHash: BlockHash?
     )
 
@@ -183,12 +165,12 @@ object Web3Requests {
         address: EthereumAddress? = null,
         fromBlock: BlockState? = null,
         toBlock: BlockState? = null,
-        topics: List<Hex32String>? = null,
+        topics: List<Hex32String?>? = null,
         blockHash: BlockHash? = null
     ) = Web3RpcRequest(
         method = "eth_getLogs",
         params = listOf(Json.encodeToJsonElement(GetLogsObject(address, fromBlock, toBlock, topics, blockHash))),
         paramsSerializer = JsonElement.serializer(),
-        resultSerializer = ListSerializer(LogEvent.serializer()).nullable
+        resultSerializer = ListSerializer(LogEvent.serializer())
     )
 }
