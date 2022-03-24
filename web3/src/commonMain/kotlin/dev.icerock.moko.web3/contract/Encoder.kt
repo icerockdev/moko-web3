@@ -4,7 +4,12 @@
 
 package dev.icerock.moko.web3.contract
 
-interface Encoder<T : Any> {
-    fun encode(data: T): ByteArray
-    fun decode(byteArray: ByteArray): T
+sealed interface Encoder<T> {
+    fun encode(item: T): ByteArray
+    fun decode(source: ByteArray): T
 }
+
+/* These types created to split decoding head and dynamic data */
+
+interface StaticEncoder<T> : Encoder<T>
+interface DynamicEncoder<T> : Encoder<T>

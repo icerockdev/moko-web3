@@ -4,9 +4,16 @@
 
 plugins {
     id("multiplatform-library-convention")
-    id("dev.icerock.mobile.multiplatform.android-manifest")
     id("publication-convention")
     id("kotlinx-serialization")
+}
+
+kotlin {
+    sourceSets {
+        all {
+            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
+        }
+    }
 }
 
 dependencies {
@@ -16,14 +23,17 @@ dependencies {
     commonMainImplementation(libs.klock)
     commonMainImplementation(libs.ktorClient)
     commonMainImplementation(libs.ktorClientLogigng)
+    commonMainImplementation(libs.ktorWebsockets)
     
     commonTestImplementation(libs.kotlinTestCommon)
     commonTestImplementation(libs.kotlinTestAnnotations)
-    
-    androidTestImplementation(libs.ktorClientOkHttp)
-    androidTestImplementation(libs.kotlinTest)
-    androidTestImplementation(libs.kotlinTestJunit)
+    commonTestImplementation(libs.ktorClientMock)
 
+    jvmMainImplementation(libs.ktorClientOkHttp)
+    jvmTestImplementation(libs.kotlinTest)
+    jvmTestImplementation(libs.kotlinTestJunit)
+
+    iosMainImplementation(libs.ktorClientIos)
     iosTestImplementation(libs.ktorClientIos)
 }
 
@@ -56,6 +66,7 @@ val newTestTask = tasks.create("iosX64TestWithNetwork") {
         }
     }
 }
+
 with(tasks.getByName("iosX64Test")) {
     dependsOn(newTestTask)
     onlyIf { false }

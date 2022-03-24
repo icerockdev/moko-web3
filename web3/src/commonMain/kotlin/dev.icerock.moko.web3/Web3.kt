@@ -4,160 +4,128 @@
 
 package dev.icerock.moko.web3
 
-import com.soywiz.kbignum.BigInt
-import dev.icerock.moko.web3.entity.InfuraRequest
-import dev.icerock.moko.web3.entity.InfuraResponse
-import dev.icerock.moko.web3.entity.Transaction
-import dev.icerock.moko.web3.entity.TransactionReceipt
-import dev.icerock.moko.web3.serializer.BigIntSerializer
+import dev.icerock.moko.web3.annotation.DelicateWeb3Api
+import dev.icerock.moko.web3.entity.RpcRequest
+import dev.icerock.moko.web3.entity.RpcResponse
 import io.ktor.client.HttpClient
+import io.ktor.client.features.*
 import io.ktor.client.request.post
 import io.ktor.client.request.url
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readText
-import io.ktor.http.ContentType
-import io.ktor.http.content.OutgoingContent
-import io.ktor.http.content.TextContent
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
+import io.ktor.http.*
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.json.*
 
-class Web3(
+/**
+ * Default http implementation for web3 requests.
+ * @delicate Don't use the default constructor since it is for test purposes only
+ */
+class Web3 @DelicateWeb3Api constructor(
     private val httpClient: HttpClient,
     private val json: Json,
-    private val infuraUrl: String
-) {
-    suspend fun getTransaction(transactionHash: TransactionHash): Transaction {
-        val requestSerializer = InfuraRequest.serializer(String.serializer())
-        val request: InfuraRequest<String> = InfuraRequest(
-            method = "eth_getTransactionByHash",
-            params = listOf(transactionHash.value)
-        )
+    private val endpointUrl: String
+) : Web3Executor {
 
-        val response: HttpResponse = httpClient.post {
-            url(infuraUrl)
-            body = json.encodeToJsonElement(requestSerializer, request).outgoingContent
-        }
+    @OptIn(DelicateWeb3Api::class)
+    constructor(endpointUrl: String) : this(
+        httpClient = HttpClient {
+            install(DefaultRequest) {
+                // some networks require the content type to be set
+                contentType(ContentType.Application.Json)
+            }
+        },
+        json = Json {
+            // some networks return an additional info in models that may not be documented
+            ignoreUnknownKeys = true
+        },
+        endpointUrl = endpointUrl
+    )
 
-        return processResponse(
-            request = request,
-            serializer = InfuraResponse.serializer(Transaction.serializer()),
-            content = response.readText()
-        )
-    }
+    override suspend fun <R> executeBatch(requests: List<Web3RpcRequest<*, out R>>): List<R> {
+        // Used later for logging if exception
+        val rawRequests = requests
+            .mapIndexed { index, web3Request ->
+                RpcRequest(
+                    method = web3Request.method,
+                    id = index,
+                    params = web3Request.params
+                )
+            }
 
-    suspend fun getTransactionReceipt(transactionHash: TransactionHash): TransactionReceipt {
-        val requestSerializer = InfuraRequest.serializer(String.serializer())
-        val request: InfuraRequest<String> = InfuraRequest(
-            method = "eth_getTransactionReceipt",
-            params = listOf(transactionHash.value)
-        )
+        val encodedToStringBody = rawRequests
+            .mapIndexed { index, request ->
+                val encodedParams = request.params.map { param ->
+                    val (value, serializer) = unsafeCast(param, requests[index].paramsSerializer)
+                    json.encodeToJsonElement(
+                        serializer = serializer,
+                        value = value
+                    )
+                }
+                json.encodeToJsonElement(
+                    serializer = RpcRequest.serializer(JsonElement.serializer()),
+                    // cannot use copy since generics mismatch
+                    value = RpcRequest(
+                        method = request.method,
+                        id = request.id,
+                        jsonrpc = request.jsonrpc,
+                        params = encodedParams
+                    )
+                )
+            }.let { list -> json.encodeToString(list) }
 
-        val response: HttpResponse = httpClient.post {
-            url(infuraUrl)
-            body = json.encodeToJsonElement(requestSerializer, request).outgoingContent
-        }
+        val responses = httpClient
+            .post<String> {
+                url(endpointUrl)
+                body = encodedToStringBody
+            }.let { raw ->
+                json.decodeFromString<List<JsonObject>>(raw)
+            }
 
-        return processResponse(
-            request = request,
-            serializer = InfuraResponse.serializer(TransactionReceipt.serializer()),
-            content = response.readText()
-        )
-    }
+        // Here we are restoring the order
+        return requests.mapIndexed { index, request ->
+            val response = responses.first { response ->
+                val id = response.getValue(key = "id").jsonPrimitive.int
+                return@first id == index
+            }
 
-    suspend fun getEthBalance(walletAddress: WalletAddress): BigInt {
-        val requestSerializer = InfuraRequest.serializer(String.serializer())
-        val request: InfuraRequest<String> = InfuraRequest(
-            method = "eth_getBalance",
-            params = listOf(walletAddress.value, "latest")
-        )
-
-        val response: HttpResponse = httpClient.post {
-            url(infuraUrl)
-            body = json.encodeToJsonElement(requestSerializer, request).outgoingContent
-        }
-
-        return processResponse(
-            request = request,
-            serializer = InfuraResponse.serializer(BigIntSerializer),
-            content = response.readText()
-        )
-    }
-
-    suspend fun <T> call(
-        transactionCall: JsonElement,
-        responseDataSerializer: KSerializer<T>
-    ): T {
-        val requestSerializer = InfuraRequest.serializer(JsonElement.serializer())
-        val request: InfuraRequest<JsonElement> = InfuraRequest(
-            method = "eth_call",
-            params = listOf(
-                transactionCall,
-                JsonPrimitive("latest")
+            return@mapIndexed processResponse(
+                request = rawRequests[index],
+                deserializer = request.resultSerializer,
+                content = response.toString()
             )
-        )
-
-        val response: HttpResponse = httpClient.post {
-            url(infuraUrl)
-            body = json.encodeToJsonElement(requestSerializer, request).outgoingContent
         }
-
-        return processResponse(
-            request = request,
-            serializer = InfuraResponse.serializer(responseDataSerializer),
-            content = response.readText()
-        )
     }
 
-    suspend fun send(
-        signedTransaction: String
-    ): TransactionHash {
-        val requestSerializer = InfuraRequest.serializer(String.serializer())
-        val request: InfuraRequest<String> = InfuraRequest(
-            method = "eth_sendRawTransaction",
-            params = listOf(signedTransaction)
-        )
-
-        val response: HttpResponse = httpClient.post {
-            url(infuraUrl)
-            body = json.encodeToJsonElement(requestSerializer, request).outgoingContent
-        }
-
-        return processResponse(
-            request = request,
-            serializer = InfuraResponse.serializer(String.serializer()),
-            content = response.readText()
-        ).let { TransactionHash(it) }
-    }
+    private fun <T> RpcResponse<JsonElement>.typed(
+        deserializer: DeserializationStrategy<T>
+    ) = RpcResponse(
+        jsonrpc = jsonrpc,
+        id = id,
+        result = json.decodeFromJsonElement(deserializer, element = result ?: JsonNull),
+        error = error
+    )
 
     private fun <T> processResponse(
-        request: InfuraRequest<*>,
-        serializer: KSerializer<InfuraResponse<T>>,
+        request: RpcRequest<*>,
+        deserializer: DeserializationStrategy<T>,
         content: String
     ): T {
-        val infuraResponse = json.decodeFromString(serializer, content)
+        val response = json.decodeFromString(RpcResponse.serializer(JsonElement.serializer()), content)
 
+        @Suppress("UNCHECKED_CAST")
         when {
-            infuraResponse.result != null -> return infuraResponse.result
-            infuraResponse.error != null -> throw Web3RpcException(
-                code = infuraResponse.error.code,
-                message = infuraResponse.error.message,
+            response.error != null -> throw Web3RpcException(
+                code = response.error.code,
+                message = response.error.message,
                 request = request
             )
-            else -> throw UnknownWeb3RpcException(
-                request = request,
-                response = content
-            )
+            else -> return response.typed(deserializer).result as T
         }
     }
 
-    private val JsonElement.outgoingContent: OutgoingContent
-        get() {
-            return TextContent(
-                text = this.toString(),
-                contentType = ContentType.Application.Json
-            )
-        }
+    @Suppress("UNCHECKED_CAST")
+    private inline fun <T> unsafeCast(value: T, serializer: SerializationStrategy<*>): Pair<T, SerializationStrategy<T>> =
+        value to (serializer as SerializationStrategy<T>)
 }

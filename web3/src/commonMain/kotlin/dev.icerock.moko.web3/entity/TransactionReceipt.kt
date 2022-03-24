@@ -8,6 +8,7 @@ package dev.icerock.moko.web3.entity
 
 import com.soywiz.kbignum.BigInt
 import dev.icerock.moko.web3.BlockHash
+import dev.icerock.moko.web3.SyncingWeb3SocketEvent
 import dev.icerock.moko.web3.TransactionHash
 import dev.icerock.moko.web3.WalletAddress
 import dev.icerock.moko.web3.serializer.BigIntSerializer
@@ -46,10 +47,10 @@ data class TransactionReceipt(
     val status: Status,
     /** integer of the transactions index position in the block **/
     val transactionIndex: BigInt,
-    /** there insn't here https://infura.io/docs/ethereum#operation/eth_getTransactionReceipt **/
-    val effectiveGasPrice: BigInt,
-    /** there insn't here https://infura.io/docs/ethereum#operation/eth_getTransactionReceipt **/
-    val type: BigInt
+    /** The transaction type: 0x0 for Legacy transactions, 0x1 for Access List transactions, 0x2 for 1559 Transactions **/
+    val type: BigInt,
+    /** optional, didn't document, found in rinkeby response **/
+    val effectiveGasPrice: BigInt? = null
 ) {
     @Transient
     val receiverAddress: WalletAddress? = this._to?.let { WalletAddress(it) }
@@ -70,5 +71,17 @@ data class TransactionReceipt(
 
         @SerialName("0x0")
         FAILURE
+    }
+
+    @Serializable
+    enum class Type {
+        @SerialName("0x0")
+        Legacy,
+
+        @SerialName("0x1")
+        AccessList,
+
+        @SerialName("0x2")
+        EIP1559
     }
 }
