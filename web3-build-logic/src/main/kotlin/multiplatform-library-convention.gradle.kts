@@ -9,4 +9,12 @@ plugins {
 kotlin {
     jvm()
     ios()
+    js(IR){
+        browser {
+            commonWebpackConfig {
+                cssSupport.enabled = false
+            }
+        }
+        binaries.library();
+    }
 }

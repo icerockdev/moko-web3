@@ -25,7 +25,7 @@ enum class NamedEncoders(
     }
 }
 
-private val listTypeRegex = Regex("(.*)\\[]")
+private val listTypeRegex = Regex("(.*)\\[\\]")
 private val uintTypeRegex = Regex("uint.+")
 private val bytesTypeRegex = Regex("bytes(.+)")
 
