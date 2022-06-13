@@ -8,10 +8,14 @@ import dev.icerock.moko.web3.annotation.DelicateWeb3Api
 import dev.icerock.moko.web3.entity.RpcRequest
 import dev.icerock.moko.web3.entity.RpcResponse
 import io.ktor.client.HttpClient
-import io.ktor.client.features.*
+import io.ktor.client.call.body
+import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.request.url
-import io.ktor.http.*
+import io.ktor.client.utils.EmptyContent.contentType
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -76,10 +80,10 @@ class Web3 @DelicateWeb3Api constructor(
             }.let { list -> json.encodeToString(list) }
 
         val responses = httpClient
-            .post<String> {
+            .post {
                 url(endpointUrl)
-                body = encodedToStringBody
-            }.let { raw ->
+                setBody(encodedToStringBody)
+            }.body<String>().let { raw ->
                 json.decodeFromString<List<JsonObject>>(raw)
             }
 

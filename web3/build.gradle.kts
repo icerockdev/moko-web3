@@ -22,7 +22,6 @@ dependencies {
     commonMainImplementation(libs.kotlinSerialization)
     commonMainImplementation(libs.klock)
     commonMainImplementation(libs.ktorClient)
-    commonMainImplementation(libs.ktorClientLogigng)
     commonMainImplementation(libs.ktorWebsockets)
     
     commonTestImplementation(libs.kotlinTestCommon)
